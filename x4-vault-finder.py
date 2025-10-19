@@ -183,9 +183,9 @@ def is_sector_gate(path):
 
 def is_super_highway_gate(path):
     return (
-        False and
         path[-1].tag == 'component' and
-        path[-1].attrib.get('class', '') == 'highway'
+        path[-1].attrib.get('class', '') in ['highwayentrygate', 'highwayexitgate'] and
+        'superhighway' in path[-1].attrib.get('macro', '')
     )
 
 

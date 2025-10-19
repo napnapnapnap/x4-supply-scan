@@ -18,9 +18,9 @@ class PositionExtractor:
         macros = root.findall('./macro')
         for macro in macros:
             if macro.attrib.get('name', '').startswith('timelines_'):
-                # Offsets from the Timelines DLC seem to be valid only in timelines missions
-                # See placement of gates
-                # * Eighteen Billion -> Grand Exchange
+                # Offsets from the Timelines DLC seem to be valid only during timelines missions
+                # See placement of these gates
+                # * Eighteen Billion -> Grand Exchange IV
                 # * Tharka's Cascade XV -> Hatikvah's Choice I
                 continue
             connections = macro.findall('./connections/connection')
