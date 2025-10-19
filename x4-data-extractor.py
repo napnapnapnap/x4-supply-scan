@@ -15,29 +15,37 @@ class PositionExtractor:
     def __init__(self):
         self.positions = {}
     def check(self, resource_id, root):
-        connections = root.findall(".//connection")
-        for c in connections:
-            ref = c.attrib.get('ref')
-            if ref not in ['zones', 'gates', 'sechighways']:
+        macros = root.findall('./macro')
+        for macro in macros:
+            if macro.attrib.get('name', '').startswith('timelines_'):
+                # Offsets from the Timelines DLC seem to be valid only in timelines missions
+                # See placement of gates
+                # * Eighteen Billion -> Grand Exchange
+                # * Tharka's Cascade XV -> Hatikvah's Choice I
                 continue
-            macro = c.find('./macro')
-            if macro is None:
-                continue
-            if ref == 'gates':
-                key = c.attrib.get('name')
-            else:
-                key = macro.attrib.get('ref')
-            if key is None:
-                continue
-            position = c.find('./offset/position')
-            if position is None:
-                continue
-            value = {
-                'x': float(position.attrib.get('x', '0')),
-                'y': float(position.attrib.get('y', '0')),
-                'z': float(position.attrib.get('z', '0'))
-            }
-            self.positions[key.lower()] = value
+            connections = macro.findall('./connections/connection')
+            for c in connections:
+                ref = c.attrib.get('ref')
+                if ref not in ['zones', 'gates', 'sechighways']:
+                    continue
+                macro = c.find('./macro')
+                if macro is None:
+                    continue
+                if ref == 'gates':
+                    key = c.attrib.get('name')
+                else:
+                    key = macro.attrib.get('ref')
+                if key is None:
+                    continue
+                position = c.find('./offset/position')
+                if position is None:
+                    continue
+                value = {
+                    'x': float(position.attrib.get('x', '0')),
+                    'y': float(position.attrib.get('y', '0')),
+                    'z': float(position.attrib.get('z', '0'))
+                }
+                self.positions[key.lower()] = value
     def finish(self):
         with open(CWD / 'x4-positions.json', 'w') as f:
             json.dump(self.positions, f, sort_keys=True, indent=4)
@@ -134,7 +142,7 @@ def main():
     parser.add_argument("x4path")
     args = parser.parse_args()
     x4path = pathlib.Path(args.x4path)
-    cat_paths = x4path.glob('**/*.cat')
+    cat_paths = sorted(x4path.glob('**/*.cat'))
     extractors = [
         PositionExtractor(),
         SectorNameExtractor(),
