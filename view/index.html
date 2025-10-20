@@ -27,8 +27,9 @@
                     ]
                 }
                 else if (o["class"] == "gate") {
+                    let activity = o["is_active"] ? "" : "(Inactive) "
                     return [
-                        "Gate to " + o["target_sector_name"],
+                        activity + "Gate to " + o["target_sector_name"],
                         "rgba(0, 0, 0, 0)",
                         {
                             color: "#fafafa",
@@ -157,7 +158,7 @@
                     x: [
                         (Math.min(...points.map(p => p.x)) + Math.max(...points.map(p => p.x))) / 2.0
                     ],
-                    y: [Math.min(...points.map(p => p.y))],
+                    y: [Math.max(...points.map(p => p.y))],
                     z: [Math.max(...points.map(p => p.z))],
                     mode: "text",
                     text: [data.sectors[sector_id].name],

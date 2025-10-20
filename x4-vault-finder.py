@@ -96,12 +96,15 @@ def maybe_store_object(path):
         data['sectors'][current_sector]['objects'][code] = {
             'class': attrib.get('class', ''),
             'code': code,
-            'has_blueprints': False,
-            'has_signalleak': False,
-            'has_wares': False,
             'macro': macro,
             'owner': attrib.get('owner', '')
         }
+        if is_vault(path):
+            data['sectors'][current_sector]['objects'][code]['has_blueprints'] = False
+            data['sectors'][current_sector]['objects'][code]['has_signalleak'] = False
+            data['sectors'][current_sector]['objects'][code]['has_wares'] = False
+        if is_sector_gate(path) or is_super_highway_gate(path):
+            data['sectors'][current_sector]['objects'][code]['is_active'] = True
     elif is_vault_loot(path):
         vault_code = path[-4].attrib['code']
         if path[-1].attrib.get('class', '') == 'collectableblueprints':
@@ -118,20 +121,20 @@ def maybe_store_object(path):
         outer_id = connection.attrib.get('id')
         connected = path[-1]
         inner_id = connected.attrib.get('connection')
+        sector_macro_of_connection_id[inner_id] = current_sector
         if clazz == 'gate':
-            # For sector gates, store outer ID as pointer target
+            # For sector gates, store outer ID as target
             data['sectors'][current_sector]['objects'][code]['target_id'] = outer_id
-            sector_macro_of_connection_id[inner_id] = current_sector
         else:
-            # For super highway gates, store inner ID as pointer target
+            # For super highway gates, store inner ID as target
             data['sectors'][current_sector]['objects'][code]['target_id'] = inner_id
-            sector_macro_of_connection_id[inner_id] = current_sector
-
-
     elif is_super_highway_step_entry(path):
         last_entrygate_id = path[-1].attrib.get('id')
     elif is_super_highway_step_exit(path):
         last_exitgate_id = path[-1].attrib.get('id')
+    elif is_gate_activity(path):
+        code = path[-2].attrib['code']
+        data['sectors'][current_sector]['objects'][code]['is_active'] = path[-1].attrib.get('active', '') != '0'
 
 
 def maybe_store_super_highway_step(path):
@@ -251,6 +254,13 @@ def is_super_highway_step_exit(path):
     return path[-1].tag == 'connection' and path[-1].attrib.get('connection') == 'exitgate'
 
 
+def is_gate_activity(path):
+    return path[-1].tag == 'object' and (
+        is_sector_gate(path[:-1]) or
+        is_super_highway_gate(path[:-1])
+    )
+
+
 def write_gate_target_sectors():
     for sector in data['sectors'].values():
         for o in sector['objects'].values():
@@ -260,7 +270,7 @@ def write_gate_target_sectors():
             if o['class'] in ['highwayentrygate', 'highwayexitgate']:
                 target_id = super_highway_step.get(target_id)
             if target_id is None:
-                print(o['class'], o['code'], 'has no target_id')
+                # print(o['class'], o['code'], 'has no target_id')
                 continue
             target_sector_macro = sector_macro_of_connection_id.get(target_id, '')
             target_sector_name = resolve_name(x4_sector_names.get(target_sector_macro, ''))
