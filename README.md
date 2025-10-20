@@ -4,17 +4,19 @@ This is a visualisation toolchain for X4 save files. It shows a 3D plot for ever
 
 It uses colors for different objects:
 
-* Blue for vaults with collectable blueprints
-* Purple for vaults with collectable wares
-* Pink for vaults with signal leaks
-* Brown for empty vaults
-* Red for khaak stations
+* Vaults
+   * Blue for collectable blueprints
+   * Purple for collectable wares
+   * Pink for signal leaks
+   * Brown for empty
+* Stations
+   * Red for Khaak
+   * Green for Player
+   * Silver for all other
 * Yellow for abandoned ships
-* Green for player stations
-* Silver for other stations
-* A silver ring for gates
+* A silver ring for gates (clickable)
 
-<img width="1549" height="813" alt="Screenshot_20251018_214527" src="https://github.com/user-attachments/assets/df51853e-7896-48cc-9011-f80e973de335" />
+<img width="1697" height="818" alt="Screenshot_20251020_134915" src="https://github.com/user-attachments/assets/a0e41689-0966-44d3-b2fe-20125d3d3790" />
 
 ## How to run
 
@@ -32,7 +34,7 @@ It uses colors for different objects:
 ## Technical details
 
 * The savefile is not modified
-* You only need python and a browser, no external dependencies need to be installed
+* You only need python and a browser, no external dependencies
 * The python script uses little memory by streaming the savefile in a single pass and keeping only relevant data
-* When a new DLC is released, the x4-data-extractor.py script needs to be run again
-* Thanks to the [X4-Info-Miner](https://github.com/TuxInvader/X4-Info-Miner) project for developing the x4-cat-miner.py script
+* When a new DLC is released, the x4-data-extractor.py script needs to be run again. The current DLC is Envoy.
+* Thanks to the [X4-Info-Miner](https://github.com/TuxInvader/X4-Info-Miner) project for developing the inspirational x4-cat-miner.py script
