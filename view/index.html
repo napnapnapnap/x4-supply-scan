@@ -28,7 +28,7 @@
                 }
                 else if (o["class"] == "gate") {
                     return [
-                        "Gate to " + o["target_name"],
+                        "Gate to " + o["target_sector_name"],
                         "rgba(0, 0, 0, 0)",
                         {
                             color: "#fafafa",
@@ -37,9 +37,9 @@
                     ]
                 }
                 else if (o["class"] == "highwayentrygate" || o["class"] == "highwayexitgate") {
-                    let direction = o["class"] == "highwayentrygate" ? "Entry" : "Exit"
+                    let direction = o["class"] == "highwayentrygate" ? "Entry to" : "Exit from"
                     return [
-                        "Super Highway " + direction,
+                        "Super Highway " + direction + " " + o["target_sector_name"],
                         "rgba(0, 0, 0, 0)",
                         {
                             color: "#fafafa",
@@ -108,7 +108,7 @@
                             line: style[2]
                         },
                         mode: "markers+text",
-                        name: sector,
+                        target_sector_macro: o["target_sector_macro"],
                         text: o["code"],
                         textfont: {
                             color: "#fafafa"
@@ -124,6 +124,7 @@
                         t: 0
                     },
                     paper_bgcolor: "#252627",
+                    hovermode: "closest",
                     scene: {
                         xaxis: {
                             title: "X",
@@ -152,10 +153,33 @@
                     },
                     showlegend: false
                 };
+                let title = {
+                    x: [
+                        (Math.min(...points.map(p => p.x)) + Math.max(...points.map(p => p.x))) / 2.0
+                    ],
+                    y: [Math.min(...points.map(p => p.y))],
+                    z: [Math.max(...points.map(p => p.z))],
+                    mode: "text",
+                    text: [data.sectors[sector_id].name],
+                    textfont: {
+                        size: 20,
+                        color: "#fafafa"
+                    },
+                    type: "scatter3d"
+                }
+                points.push(title)
                 setTimeout(
                     () => {
-                        document.getElementById("plot").innerHTML = "";
+                        let plot = document.getElementById("plot")
+                        plot.innerHTML = "";
                         Plotly.newPlot("plot", points, layout);
+                        plot.on("plotly_click", function(data) {
+                            let target_sector_macro = data["points"][0]["data"]["target_sector_macro"]
+                            console.log('target_sector_macro', target_sector_macro)
+                            if (target_sector_macro !== undefined) {
+                                show(target_sector_macro)
+                            }
+                        });
                     },
                     1
                 );

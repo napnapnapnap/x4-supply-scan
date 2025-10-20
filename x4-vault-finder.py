@@ -10,15 +10,21 @@ import xml.etree.ElementTree as ET
 
 CWD = pathlib.Path(__file__).parent.resolve()
 
-component_positions = {}
-data = {
-    'sectors': {}
-}
-current_sector = None
 x4_sector_names = None
 x4_ship_names = None
 x4_positions = None
 x4_strings = None
+
+component_positions = {}
+current_sector = None
+data = {
+    'sectors': {}
+}
+sector_macro_of_connection_id = {}
+
+last_entrygate_id = None
+last_exitgate_id = None
+super_highway_step = {}
 
 REFERENCE = re.compile(r'{(\d*),\s*(\d+)}')
 PARENTHESES = re.compile(r'^(.*)\([^)]*\)(.*)$')
@@ -71,7 +77,7 @@ def maybe_store_component_position(path):
 
 
 def maybe_store_object(path):
-    global current_sector
+    global current_sector, last_entrygate_id, last_exitgate_id
     attrib = path[-1].attrib
     if is_sector(path):
         current_sector = attrib['macro']
@@ -96,14 +102,6 @@ def maybe_store_object(path):
             'macro': macro,
             'owner': attrib.get('owner', '')
         }
-        if is_sector_gate(path):
-            if f'cluster_{macro[-3:]}_macro' in x4_sector_names:
-                target_name = resolve_name(x4_sector_names[f'cluster_{macro[-3:]}_macro'])
-            elif macro[-3] == '0' and f'cluster_{macro[-2:]}_macro' in x4_sector_names:
-                target_name = resolve_name(x4_sector_names[f'cluster_{macro[-2:]}_macro'])
-            else:
-                target_name = 'unknown sector'
-            data['sectors'][current_sector]['objects'][code]['target_name'] = target_name
     elif is_vault_loot(path):
         vault_code = path[-4].attrib['code']
         if path[-1].attrib.get('class', '') == 'collectableblueprints':
@@ -112,6 +110,35 @@ def maybe_store_object(path):
             data['sectors'][current_sector]['objects'][vault_code]['has_signalleak'] = True
         if path[-1].attrib.get('class', '') == 'collectablewares':
             data['sectors'][current_sector]['objects'][vault_code]['has_wares'] = True
+    elif is_gate_connected(path):
+        gate_component = path[-4]
+        code = gate_component.attrib.get('code')
+        clazz = gate_component.attrib.get('class')
+        connection = path[-2]
+        outer_id = connection.attrib.get('id')
+        connected = path[-1]
+        inner_id = connected.attrib.get('connection')
+        if clazz == 'gate':
+            # For sector gates, store outer ID as pointer target
+            data['sectors'][current_sector]['objects'][code]['target_id'] = outer_id
+            sector_macro_of_connection_id[inner_id] = current_sector
+        else:
+            # For super highway gates, store inner ID as pointer target
+            data['sectors'][current_sector]['objects'][code]['target_id'] = inner_id
+            sector_macro_of_connection_id[inner_id] = current_sector
+
+
+    elif is_super_highway_step_entry(path):
+        last_entrygate_id = path[-1].attrib.get('id')
+    elif is_super_highway_step_exit(path):
+        last_exitgate_id = path[-1].attrib.get('id')
+
+
+def maybe_store_super_highway_step(path):
+    if path[-1].tag != 'component' or path[-1].attrib.get('class') != 'highway':
+        return
+    super_highway_step[last_entrygate_id] = last_exitgate_id
+    super_highway_step[last_exitgate_id] = last_entrygate_id
 
 
 def maybe_store_position(path):
@@ -205,6 +232,42 @@ def is_vault_loot(path):
     )
 
 
+def is_gate_connected(path):
+    return (
+        path[-1].tag == 'connected' and
+        (path[-2].attrib.get('connection') == 'destination' or path[-2].attrib.get('connection').startswith('clustergate')) and
+        is_sector_gate(path[:-3])
+    ) or (
+        path[-1].tag == 'connected' and
+        is_super_highway_gate(path[:-3])
+    )
+
+
+def is_super_highway_step_entry(path):
+    return path[-1].tag == 'connection' and path[-1].attrib.get('connection') == 'entrygate'
+
+
+def is_super_highway_step_exit(path):
+    return path[-1].tag == 'connection' and path[-1].attrib.get('connection') == 'exitgate'
+
+
+def write_gate_target_sectors():
+    for sector in data['sectors'].values():
+        for o in sector['objects'].values():
+            if not o.get('class') in ['gate', 'highwayentrygate', 'highwayexitgate']:
+                continue
+            target_id = o.get('target_id', None)
+            if o['class'] in ['highwayentrygate', 'highwayexitgate']:
+                target_id = super_highway_step.get(target_id)
+            if target_id is None:
+                print(o['class'], o['code'], 'has no target_id')
+                continue
+            target_sector_macro = sector_macro_of_connection_id.get(target_id, '')
+            target_sector_name = resolve_name(x4_sector_names.get(target_sector_macro, ''))
+            o['target_sector_macro'] = target_sector_macro
+            o['target_sector_name'] = target_sector_name
+
+
 def main():
     global x4_sector_names, x4_ship_names, x4_positions, x4_strings
     with open(CWD / 'x4-sector-names.json', 'r') as f:
@@ -227,9 +290,11 @@ def main():
                 maybe_store_object(path)
                 maybe_print_dot(path)
             elif event == 'end':
+                maybe_store_super_highway_step(path)
                 maybe_store_position(path)
                 path.pop()
                 elem.clear()
+    write_gate_target_sectors()
     with open(CWD / 'view/data.js', 'w') as f:
         f.write('let data = ' + json.dumps(data, sort_keys=True, indent=4))
     print()
