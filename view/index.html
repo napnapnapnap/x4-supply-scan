@@ -6,8 +6,18 @@
         <script type="text/javascript">
             function getStyle(o) {
                 if (o["class"] == "station" && o["owner"] == "khaak") {
+                    var title = "";
+                    if (o["macro"].includes("_hive_")) {
+                        title = "Khaak Hive"
+                    }
+                    else if (o["macro"].includes("_nest_")) {
+                        title = "Khaak Nest"
+                    }
+                    else {
+                        title = "Khaak Weapon Platform"
+                    }
                     return [
-                        "Khaak Station",
+                        title,
                         "crimson",
                         {}
                     ]
@@ -236,15 +246,21 @@
                 }
             }
             function maybe_khaak_tag(sector_data) {
-                let has_khaak_station = false;
+                let has_khaak_hive = false;
+                let has_khaak_nest = false;
                 for (let [code, object_data] of Object.entries(sector_data["objects"])) {
+                    if (object_data["owner"] == "khaak" && object_data["macro"].includes("_hive_")) {
+                        has_khaak_hive = true;
+                    }
                     if (object_data["owner"] == "khaak") {
-                        has_khaak_station = true;
-                        break;
+                        has_khaak_nest = true;
                     }
                 }
-                if (has_khaak_station) {
-                    return `<span class="tag khaak">Khaak Station</span>`
+                if (has_khaak_hive) {
+                    return `<span class="tag khaak">Khaak Hive</span>`
+                }
+                else if (has_khaak_nest) {
+                    return `<span class="tag khaak">Khaak Nest</span>`
                 }
                 else {
                     return ""
