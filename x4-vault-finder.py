@@ -105,6 +105,8 @@ def maybe_store_object(path):
             data['sectors'][current_sector]['objects'][code]['has_wares'] = False
         if is_sector_gate(path) or is_super_highway_gate(path):
             data['sectors'][current_sector]['objects'][code]['is_active'] = True
+        if is_station(path) and path[-1].attrib.get('factionheadquarters') == '1':
+            data['sectors'][current_sector]['objects'][code]['is_headquarter'] = True
     elif is_vault_loot(path):
         vault_code = path[-4].attrib['code']
         if path[-1].attrib.get('class', '') == 'collectableblueprints':

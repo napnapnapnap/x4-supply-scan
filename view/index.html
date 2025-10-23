@@ -30,8 +30,15 @@
                     ]
                 }
                 else if (o["class"] == "station") {
+                    var title = capitalizeFirstLetter(o["owner"])
+                    if (o["is_headquarter"]) {
+                        title += " Headquarter"
+                    }
+                    else {
+                        title += " Station"
+                    }
                     return [
-                        capitalizeFirstLetter(o["owner"]) + " Station",
+                        title,
                         "silver",
                         {}
                     ]
@@ -266,6 +273,16 @@
                     return ""
                 }
             }
+            function maybe_headquarter_tag(sector_data) {
+                var tags = ""
+                for (let [code, object_data] of Object.entries(sector_data["objects"])) {
+                    if (object_data["is_headquarter"]) {
+                        let faction = capitalizeFirstLetter(object_data["owner"])
+                        tags += `<span class="tag headquarter">${faction} Headquarter</span>`
+                    }
+                }
+                return tags
+            }
             window.addEventListener("load", function () {
                 let sidebar = document.getElementById("sidebar")
                 sector_names = Object.keys(data["sectors"])
@@ -286,6 +303,7 @@
                         ${maybe_loot_tag(sector_data)}
                         ${maybe_ship_tag(sector_data)}
                         ${maybe_khaak_tag(sector_data)}
+                        ${maybe_headquarter_tag(sector_data)}
                     </a>
                     `
                     sidebar.insertAdjacentHTML("beforeend", html)
@@ -333,6 +351,7 @@
 
             .tag {
                 color: #fafafa;
+                background-color: gray;
                 display: inline-block;
                 font-size: 0.7rem;
                 font-weight: bold;
@@ -342,27 +361,27 @@
             }
 
             .blueprints {
-                background: dodgerblue;
+                background-color: dodgerblue;
             }
 
             .signalleak {
-                background: mediumvioletred;
+                background-color: mediumvioletred;
             }
 
             .wares {
-                background: blueviolet;
+                background-color: blueviolet;
             }
 
             .ship {
-                background: goldenrod;
+                background-color: goldenrod;
             }
 
             .empty {
-                background: saddlebrown;
+                background-color: saddlebrown;
             }
 
             .khaak {
-                background: crimson;
+                background-color: crimson;
             }
 
             #wrapper {
