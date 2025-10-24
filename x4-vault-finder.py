@@ -101,6 +101,8 @@ def maybe_store_object(path):
             'macro': macro,
             'owner': attrib.get('owner', '')
         }
+        if is_station(path) and path[-1].attrib.get('state') == 'wreck':
+            data['sectors'][current_sector]['objects'][code]['is_wreck'] = True
         if is_vault(path):
             data['sectors'][current_sector]['objects'][code]['has_blueprints'] = False
             data['sectors'][current_sector]['objects'][code]['has_signalleak'] = False

@@ -16,6 +16,9 @@
                     else {
                         title = "Khaak Weapon Platform"
                     }
+                    if (o["is_wreck"]) {
+                        title += " (destroyed)"
+                    }
                     return [
                         title,
                         "crimson",
@@ -23,8 +26,12 @@
                     ]
                 }
                 else if (o["class"] == "station" && o["owner"] == "player") {
+                    var title = "Player Station"
+                    if (o["is_wreck"]) {
+                        title += " (destroyed)"
+                    }
                     return [
-                        "Player Station",
+                        title,
                         "green",
                         {}
                     ]
@@ -36,6 +43,9 @@
                     }
                     else {
                         title += " Station"
+                    }
+                    if (o["is_wreck"]) {
+                        title += " (destroyed)"
                     }
                     return [
                         title,
@@ -256,10 +266,13 @@
                 let has_khaak_hive = false;
                 let has_khaak_nest = false;
                 for (let [code, object_data] of Object.entries(sector_data["objects"])) {
-                    if (object_data["owner"] == "khaak" && object_data["macro"].includes("_hive_")) {
+                    if (object_data["is_wreck"] || object_data["owner"] != "khaak") {
+                        continue
+                    }
+                    if (object_data["macro"].includes("_hive_")) {
                         has_khaak_hive = true;
                     }
-                    if (object_data["owner"] == "khaak") {
+                    else {
                         has_khaak_nest = true;
                     }
                 }
