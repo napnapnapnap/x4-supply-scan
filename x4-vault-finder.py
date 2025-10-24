@@ -17,6 +17,7 @@ x4_strings = None
 
 component_positions = {}
 current_sector = None
+current_resource_area = None
 data = {
     'sectors': {}
 }
@@ -68,7 +69,7 @@ def get_sector_name(sector_id):
 
 
 def maybe_store_component_position(path):
-    if len(path) >= 3 and path[-1].tag == 'position' and path[-2].tag == 'offset' and path[-3].tag == 'component':
+    if is_at(path, 'component/offset/position'):
         x = float(path[-1].attrib.get('x', '0'))
         y = float(path[-1].attrib.get('y', '0'))
         z = float(path[-1].attrib.get('z', '0'))
@@ -83,7 +84,8 @@ def maybe_store_object(path):
         current_sector = attrib['macro']
         data['sectors'][current_sector] = {
             'name': get_sector_name(current_sector),
-            'objects': {}
+            'objects': {},
+            'resource_areas': []
         }
     elif is_station(path) or is_sector_gate(path) or is_super_highway_gate(path) or is_vault(path) or is_abandoned_ship(path):
         code = attrib['code']
@@ -280,6 +282,43 @@ def write_gate_target_sectors():
             o['target_sector_name'] = target_sector_name
 
 
+def maybe_store_resource_start(path):
+    global current_resource_area
+    if is_at(path, 'resourceareas/area'):
+        current_resource_area = {
+            'x': int(path[-1].attrib.get('x', '0')),
+            'y': int(path[-1].attrib.get('y', '0')),
+            'z': int(path[-1].attrib.get('z', '0')),
+            'resources': {}
+        }
+    elif is_at(path, 'resourceareas/area/wares/ware/recharge'):
+        resource_name = path[-2].attrib['ware']
+        if resource_name not in current_resource_area['resources']:
+            current_resource_area['resources'][resource_name] = {}
+        current_resource_area['resources'][resource_name]['recharge_max'] = int(path[-1].attrib.get('max', '0'))
+        current_resource_area['resources'][resource_name]['recharge_time'] = int(path[-1].attrib.get('time', '0'))
+    elif is_at(path, 'resourceareas/area/yields/ware/yield'):
+        resource_name = path[-2].attrib['ware']
+        if resource_name not in current_resource_area['resources']:
+            current_resource_area['resources'][resource_name] = {}
+        current_resource_area['resources'][resource_name]['yield'] = path[-1].attrib.get('name', '')
+
+
+def maybe_store_resource_end(path):
+    global current_resource_area
+    if path[-1].tag == 'area' and path[-2].tag == 'resourceareas':
+        data['sectors'][current_sector]['resource_areas'].append(current_resource_area)
+        current_resource_area = None
+
+
+def is_at(path, expected):
+    expected_parts = expected.split('/')
+    if len(path) < len(expected_parts):
+        return False
+    last_n_path_elements = path[-len(expected_parts):]
+    return [e.tag for e in last_n_path_elements] == expected_parts
+
+
 def main():
     global x4_sector_names, x4_ship_names, x4_positions, x4_strings
     with open(CWD / 'x4-sector-names.json', 'r') as f:
@@ -301,9 +340,11 @@ def main():
                 maybe_store_component_position(path)
                 maybe_store_object(path)
                 maybe_print_dot(path)
+                maybe_store_resource_start(path)
             elif event == 'end':
                 maybe_store_super_highway_step(path)
                 maybe_store_position(path)
+                maybe_store_resource_end(path)
                 path.pop()
                 elem.clear()
     write_gate_target_sectors()
