@@ -95,156 +95,6 @@
                     ]
                 }
             }
-            function capitalizeFirstLetter(string) {
-                return string.charAt(0).toUpperCase() + string.slice(1)
-            }
-            function get_points(objects) {
-                return {
-                    x: objects.map(s => s["x"]),
-                    y: objects.map(s => s["y"]),
-                    z: objects.map(s => s["z"]),
-                    hoverinfo: "text",
-                    hovertext: objects.map(s => getStyle(s)[0]),
-                    name: "Unnamed",
-                    marker: {
-                        size: 5,
-                        color: objects.map(s => getStyle(s)[1])
-                    },
-                    mode: "markers+text",
-                    text: objects.map(s => s["code"]),
-                    textfont: {
-                        color: "#fafafa"
-                    },
-                    type: "scatter3d"
-                }
-            }
-            function get_station_points(objects) {
-                let points = get_points(objects.filter(o => o["class"] === "station"))
-                points.name = "Stations"
-                return points
-            }
-            function get_gate_points(objects) {
-                let gate_objects = objects.filter(o => ["gate", "highwayentrygate", "highwayexitgate"].includes(o["class"]))
-                let target_sector_macros = gate_objects.map(o => o["target_sector_macro"])
-                let points = get_points(gate_objects)
-                points.name = "Gates"
-                points.target_sector_macros = target_sector_macros
-                points.marker.line = {
-                    color: "#fafafa",
-                    width: 1
-                }
-                return points
-            }
-            function get_ship_points(objects) {
-                let points = get_points(objects.filter(o => o["class"].startsWith("ship")))
-                points.name = "Abandoned Ships"
-                return points
-            }
-            function get_vault_points(objects) {
-                let points = get_points(objects.filter(o => o["class"] == "datavault"))
-                points.name = "Datavaults"
-                return points
-            }
-            function get_title_point(points, sector_id) {
-                let all_x = points.flatMap(trace => trace.x)
-                let all_y = points.flatMap(trace => trace.y)
-                let all_z = points.flatMap(trace => trace.z)
-                let min_x = Math.min(...all_x)
-                let max_x = Math.max(...all_x)
-                let max_y = Math.max(...all_y)
-                let max_z = Math.max(...all_z)
-                return {
-                    x: [(min_x + max_x) / 2.0],
-                    y: [max_y],
-                    z: [max_z],
-                    mode: "text",
-                    name: "Title",
-                    text: [data.sectors[sector_id].name],
-                    textfont: {
-                        size: 20,
-                        color: "#fafafa"
-                    },
-                    type: "scatter3d"
-                }
-            }
-            function show(sector_id) {
-                for (let e of document.getElementsByClassName("sector")) {
-                    e.classList.remove("active")
-                }
-                document.getElementById(sector_id).classList.add("active")
-
-                let sector = data.sectors[sector_id]
-                let objects = Object.values(sector["objects"])
-                let points = [
-                    get_station_points(objects),
-                    get_gate_points(objects),
-                    get_ship_points(objects),
-                    get_vault_points(objects),
-                ]
-                points.push(get_title_point(points, sector_id))
-                console.log(points)
-
-                let layout = {
-                    margin: {
-                        l: 0,
-                        r: 0,
-                        b: 0,
-                        t: 0
-                    },
-                    paper_bgcolor: "#252627",
-                    hovermode: "closest",
-                    legend: {
-                        font: {
-                            color: "#fafafa"
-                        },
-                        x: 1,
-                        y: 0,
-                        xanchor: 'right',
-                        yanchor: 'top'
-                    },
-                    scene: {
-                        xaxis: {
-                            title: "X",
-                            color: "#fafafa",
-                            gridcolor: "silver",
-                            zerolinecolor: "#fafafa",
-                            autorange: "reversed"
-                        },
-                        yaxis: {
-                            title: "Y",
-                            color: "#fafafa",
-                            gridcolor: "silver",
-                            zerolinecolor: "#fafafa"
-                        },
-                        zaxis: {
-                            title: "Z",
-                            color: "#fafafa",
-                            gridcolor: "silver",
-                            zerolinecolor: "#fafafa"
-                        },
-                        aspectmode: "data",
-                        camera: {
-                            eye: { x: 0, y: 4, z: 0 },
-                            up: { x: 0, y: 0, z: 1 }
-                        }
-                    },
-                    showlegend: true
-                };
-                setTimeout(
-                    () => {
-                        let plot = document.getElementById("plot")
-                        plot.innerHTML = "";
-                        Plotly.newPlot("plot", points, layout);
-                        plot.on("plotly_click", function(data) {
-                            let target_sector_macro = data["points"][0]["data"]["target_sector_macro"]
-                            if (target_sector_macro !== undefined) {
-                                show(target_sector_macro)
-                            }
-                        });
-                    },
-                    1
-                );
-            }
             function maybe_loot_tag(sector_data) {
                 let has_blueprints = false;
                 let has_wares = false;
@@ -329,6 +179,220 @@
                 }
                 return tags
             }
+            function capitalizeFirstLetter(string) {
+                return string.charAt(0).toUpperCase() + string.slice(1)
+            }
+            function formatNumber(n) {
+                if (Math.abs(n) >= 1) {
+                    n = Math.round(n)
+                }
+                return new Intl.NumberFormat().format(n)
+            }
+            function get_points(objects) {
+                return {
+                    x: objects.map(s => s["x"]),
+                    y: objects.map(s => s["y"]),
+                    z: objects.map(s => s["z"]),
+                    hoverinfo: "text",
+                    hovertext: objects.map(s => getStyle(s)[0]),
+                    name: "Unnamed",
+                    marker: {
+                        size: 5,
+                        color: objects.map(s => getStyle(s)[1])
+                    },
+                    mode: "markers+text",
+                    text: objects.map(s => s["code"]),
+                    textfont: {
+                        color: "#fafafa"
+                    },
+                    type: "scatter3d"
+                }
+            }
+            function get_station_points(objects) {
+                let points = get_points(objects.filter(o => o["class"] === "station"))
+                points.name = "Stations"
+                return points
+            }
+            function get_gate_points(objects) {
+                let gate_objects = objects.filter(o => ["gate", "highwayentrygate", "highwayexitgate"].includes(o["class"]))
+                let target_sector_macros = gate_objects.map(o => o["target_sector_macro"])
+                let points = get_points(gate_objects)
+                points.name = "Gates"
+                points.target_sector_macros = target_sector_macros
+                points.marker.line = {
+                    color: "#fafafa",
+                    width: 1
+                }
+                return points
+            }
+            function get_ship_points(objects) {
+                let points = get_points(objects.filter(o => o["class"].startsWith("ship")))
+                points.name = "Abandoned Ships"
+                return points
+            }
+            function get_vault_points(objects) {
+                let vault_objects = objects.filter(o => o["class"] == "datavault" || o["macro"].includes("_erlking_vault_"))
+                let points = get_points(vault_objects)
+                points.name = "Datavaults"
+                return points
+            }
+            function get_title_point(objects, sector_id) {
+                let all_x = Object.values(objects).map(o => o.x)
+                let all_y = Object.values(objects).map(o => o.y)
+                let all_z = Object.values(objects).map(o => o.z)
+                let min_x = Math.min(...all_x)
+                let max_x = Math.max(...all_x)
+                let max_y = Math.max(...all_y)
+                let max_z = Math.max(...all_z)
+                return {
+                    x: [(min_x + max_x) / 2.0],
+                    y: [max_y],
+                    z: [max_z],
+                    hovertemplate: "<extra></extra>",
+                    mode: "text",
+                    name: "Title",
+                    text: [data.sectors[sector_id].name],
+                    textfont: {
+                        size: 20,
+                        color: "#fafafa"
+                    },
+                    type: "scatter3d"
+                }
+            }
+            function get_resource_points(resource_areas, color, resource_name) {
+                let spots = resource_areas.filter(a => a["resources"][resource_name] !== undefined)
+                let yields = spots.map(s => s["resources"][resource_name]["yield"])
+                let hourly_spawn_rates = spots.map(s => s["resources"][resource_name]["recharge_max"] * 3600.0 / s["resources"][resource_name]["recharge_time"])
+                let total_hourly_spawn = hourly_spawn_rates.reduce((a, b) => a + b, 0)
+                let amount_max = spots.map(s => s["resources"][resource_name]["recharge_max"]).reduce((a, b) => a + b, 0)
+                let amount_now = spots.map(s => s["resources"][resource_name]["recharge_current"]).reduce((a, b) => a + b, 0)
+                return {
+                    x: spots.map(s => s.x),
+                    y: spots.map(s => s.y),
+                    z: spots.map(s => s.z),
+                    customdata: yields,
+                    hovertemplate: `
+Resource: ${capitalizeFirstLetter(resource_name)}<br>
+Yield: %{customdata}<br>
+Sector-wide stats:<br>
+* Resource areas: ${spots.length}<br>
+* Hourly spawn: ${formatNumber(total_hourly_spawn)}<br>
+* Amount max: ${formatNumber(amount_max)}<br>
+* Amount now: ${formatNumber(amount_now)}
+<extra></extra>`,
+                    mode: "markers",
+                    name: "Resource: " + capitalizeFirstLetter(resource_name),
+                    marker: {
+                        color: color,
+                        size: 5,
+                        symbol: "diamond",
+                        opacity: 0.2
+                    },
+                    type: "scatter3d",
+                    visible: "legendonly",
+                }
+            }
+            var lastShowAt = null;
+            function show(sector_id) {
+                if (lastShowAt !== null && performance.now() - lastShowAt < 200) {
+                    // Plotly fires clicks more than once sometimes
+                    return
+                }
+                lastShowAt = performance.now()
+
+                for (let e of document.getElementsByClassName("sector")) {
+                    e.classList.remove("active")
+                }
+                document.getElementById(sector_id).classList.add("active")
+
+                let sector = data.sectors[sector_id]
+                let objects = Object.values(sector["objects"])
+                let resource_areas = Object.values(sector["resource_areas"])
+                let points = [
+                    get_station_points(objects),
+                    get_gate_points(objects),
+                    get_ship_points(objects),
+                    get_vault_points(objects),
+                    get_resource_points(resource_areas, "rgb(255, 238, 193)", "helium"),
+                    get_resource_points(resource_areas, "rgb(197, 255, 255)", "hydrogen"),
+                    get_resource_points(resource_areas, "rgb(255, 255, 255)", "ice"),
+                    get_resource_points(resource_areas, "rgb( 54, 124, 162)", "methane"),
+                    get_resource_points(resource_areas, "rgb(171,  32, 177)", "nividium"),
+                    get_resource_points(resource_areas, "rgb(255, 140,   0)", "ore"),
+                    get_resource_points(resource_areas, "rgb(252,  61,  57)", "rawscrap"),
+                    get_resource_points(resource_areas, "rgb(212, 211, 207)", "silicon"),
+                ]
+                points.push(get_title_point(objects, sector_id))
+                let layout = {
+                    margin: {
+                        l: 0,
+                        r: 0,
+                        b: 0,
+                        t: 0
+                    },
+                    paper_bgcolor: "#252627",
+                    hoverlabel: {
+                        align: "left"
+                    },
+                    hovermode: "closest",
+                    legend: {
+                        font: {
+                            color: "#fafafa"
+                        },
+                        itemdoubleclick: false,
+                        y: 0,
+                        xanchor: 'right',
+                        yanchor: 'bottom'
+                    },
+                    scene: {
+                        xaxis: {
+                            title: "X",
+                            color: "#fafafa",
+                            gridcolor: "silver",
+                            zerolinecolor: "#fafafa",
+                            autorange: "reversed"
+                        },
+                        yaxis: {
+                            title: "Y",
+                            color: "#fafafa",
+                            gridcolor: "silver",
+                            zerolinecolor: "#fafafa"
+                        },
+                        zaxis: {
+                            title: "Z",
+                            color: "#fafafa",
+                            gridcolor: "silver",
+                            zerolinecolor: "#fafafa"
+                        },
+                        aspectmode: "data",
+                        camera: {
+                            eye: { x: 0, y: 4, z: 0 },
+                            up: { x: 0, y: 0, z: 1 }
+                        }
+                    },
+                    showlegend: true
+                };
+                setTimeout(
+                    () => {
+                        let plotDiv = document.getElementById("plot")
+                        plotDiv.innerHTML = "";
+                        Plotly.newPlot("plot", points, layout)
+                        plotDiv.on("plotly_click", function(data) {
+                            let pointNumber = data["points"][0]["pointNumber"]
+                            let target_sector_macros = data["points"][0]["data"]["target_sector_macros"]
+                            if (target_sector_macros === undefined) {
+                                return
+                            }
+                            let macro = target_sector_macros[pointNumber]
+                            if (macro === undefined) {
+                                return
+                            }
+                            show(macro)
+                        });
+                    },
+                    0
+                );
+            }
             window.addEventListener("load", function () {
                 let sidebar = document.getElementById("sidebar")
                 sector_names = Object.keys(data["sectors"])
@@ -353,6 +417,7 @@
                     </a>
                     `
                     sidebar.insertAdjacentHTML("beforeend", html)
+
                 }
             });
             window.addEventListener("resize", () => {
