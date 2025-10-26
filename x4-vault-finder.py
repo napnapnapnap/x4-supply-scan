@@ -297,8 +297,13 @@ def maybe_store_resource_start(path):
         resource_name = path[-2].attrib['ware']
         if resource_name not in current_resource_area['resources']:
             current_resource_area['resources'][resource_name] = {}
-        current_resource_area['resources'][resource_name]['recharge_max'] = int(path[-1].attrib.get('max', '0'))
-        current_resource_area['resources'][resource_name]['recharge_time'] = int(path[-1].attrib.get('time', '0'))
+        recharge_max = int(path[-1].attrib.get('max', '0'))
+        recharge_current = path[-1].attrib.get('current')
+        recharge_current = recharge_max if recharge_current is None else int(recharge_current)
+        recharge_time = int(path[-1].attrib.get('time', '0'))
+        current_resource_area['resources'][resource_name]['recharge_max'] = recharge_max
+        current_resource_area['resources'][resource_name]['recharge_current'] = recharge_current
+        current_resource_area['resources'][resource_name]['recharge_time'] = recharge_time
     elif is_at(path, 'resourceareas/area/yields/ware/yield'):
         resource_name = path[-2].attrib['ware']
         if resource_name not in current_resource_area['resources']:
