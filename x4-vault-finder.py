@@ -84,6 +84,7 @@ def maybe_store_object(path):
         current_sector = attrib['macro']
         data['sectors'][current_sector] = {
             'name': get_sector_name(current_sector),
+            'is_known': attrib.get('known') == '1' or attrib.get('knownto') == 'player',
             'objects': {},
             'resource_areas': []
         }
