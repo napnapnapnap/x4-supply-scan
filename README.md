@@ -5,16 +5,16 @@ This is a visualisation toolchain for X4 save files. It shows a 3D plot for ever
 It uses colors for different objects:
 
 * Vaults
-   * Blue for collectable blueprints
+   * Blue for collectable blueprints (This shows the Erlking vaults)
    * Purple for collectable wares
    * Pink for signal leaks
    * Brown for empty
 * Stations
    * Red for Khaak
    * Green for Player
-   * Silver for all other
+   * Silver for all others
 * Yellow for abandoned ships
-* A silver ring for gates (clickable)
+* A silver ring for gates (clickable to navigate there)
 
 <img width="1697" height="818" alt="Screenshot_20251020_134915" src="https://github.com/user-attachments/assets/a0e41689-0966-44d3-b2fe-20125d3d3790" />
 
