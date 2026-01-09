@@ -1,0 +1,134 @@
+html {
+    color: #fafafa;
+    font-family: ui-sans-serif,-apple-system,system-ui,Segoe UI,Helvetica,Apple Color Emoji,Arial,sans-serif,Segoe UI Emoji,Segoe UI Symbol;
+    height: 100%;
+}
+
+body {
+    background-color: #252627;
+    height: 100%;
+    margin: 0;
+}
+
+a#title {
+    color: #fafafa;
+    font-size: 150%;
+    margin: 0 0 10px 0;
+    text-decoration: none
+}
+
+#upload-container {
+    margin: 10px 6px 15px 6px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #444;
+}
+
+.upload-button {
+    display: inline-block;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #4a9eff 0%, #2d7dd2 100%);
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.upload-button:hover {
+    background: linear-gradient(135deg, #5aafff 0%, #3d8de2 100%);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+}
+
+.upload-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+#file-upload {
+    display: none;
+}
+
+#upload-progress {
+    display: none;
+    margin-top: 10px;
+    padding: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+
+#upload-status {
+    color: #aaa;
+}
+
+a.sector {
+    cursor: pointer;
+    display: block;
+    margin: 0 6px;
+    padding: 0 0 0 3px;
+}
+
+a.sector:hover {
+    background-color: gray;
+}
+
+a.sector.active {
+    background-color: #fafafa;
+    color: black;
+}
+
+.tag {
+    color: #fafafa;
+    background-color: gray;
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: bold;
+    border-radius: 4px;
+    padding: 2px 4px;
+    margin: 2px 0px;
+}
+
+.blueprints {
+    background-color: dodgerblue;
+}
+
+.signalleak {
+    background-color: mediumvioletred;
+}
+
+.wares {
+    background-color: blueviolet;
+}
+
+.ship {
+    background-color: goldenrod;
+}
+
+.empty {
+    background-color: saddlebrown;
+}
+
+.khaak {
+    background-color: crimson;
+}
+
+#wrapper {
+    height: 100%;
+    width: 100%;
+}
+
+#sidebar {
+    float: left;
+    height: 100%;
+    overflow-y: scroll;
+    width: 20%;
+}
+
+#plot {
+    float: right;
+    height: 100%;
+    width: 80%;
+}
