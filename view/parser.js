@@ -1,5 +1,8 @@
 // X4 Save File Parser - JavaScript implementation of x4-vault-finder.py
 
+// Initialize empty data structure
+window.data = { sectors: {} };
+
 class X4SaveParser {
     constructor(sectorNames, shipNames, positions, strings) {
         this.sectorNames = sectorNames;
@@ -387,7 +390,7 @@ class X4SaveParser {
     async parse(file, onProgress) {
         this.onProgress = onProgress;
         
-        if (onProgress) onProgress('Decompressing file...');
+        if (onProgress) onProgress('Reading file...');
         
         let xmlText;
         
@@ -434,7 +437,7 @@ class X4SaveParser {
             chunks.push(value);
             totalSize += value.length;
             if (onProgress && totalSize % (10 * 1024 * 1024) < value.length) {
-                onProgress(`Decompressing... ${Math.round(totalSize / 1024 / 1024)} MB`);
+                onProgress(`Reading... ${Math.round(totalSize / 1024 / 1024)} MB`);
             }
         }
         
@@ -451,13 +454,17 @@ class X4SaveParser {
     async parseXML(xmlText, onProgress) {
         const path = [];
         const len = xmlText.length;
-        let lastProgress = 0;
+        let lastProgress = -1;
+        let sectorCount = 0;
         
         const tagPattern = /<(\/?)([\w:-]+)([^>]*?)(\/?)>/g;
         
         let match;
+        let matchCount = 0;
+        
         while ((match = tagPattern.exec(xmlText)) !== null) {
             const [fullMatch, closeSlash, tagName, attrString, selfClose] = match;
+            matchCount++;
             
             // Skip XML declarations, comments, CDATA, DOCTYPE
             if (tagName.startsWith('?') || tagName.startsWith('!')) {
@@ -482,6 +489,11 @@ class X4SaveParser {
                 this.maybeStoreObject(path);
                 this.maybeStoreResourceStart(path);
                 
+                // Track sector count for progress
+                if (tagName === 'component' && attrib['class'] === 'sector') {
+                    sectorCount++;
+                }
+                
                 if (selfClose === '/') {
                     // Self-closing tag, immediately close
                     this.maybeStoreSuperHighwayStep(path);
@@ -491,13 +503,15 @@ class X4SaveParser {
                 }
             }
             
-            // Progress reporting
+            // Progress reporting - update every 1% and yield to UI
             if (onProgress) {
                 const progress = Math.floor(match.index / len * 100);
                 if (progress > lastProgress) {
                     lastProgress = progress;
-                    if (progress % 5 === 0) {
-                        onProgress(`Parsing XML... ${progress}%`);
+                    onProgress(`Parsing save... ${progress}% (${sectorCount} sectors)`);
+                    // Yield to UI every few percent to keep it responsive
+                    if (progress % 3 === 0) {
+                        await new Promise(resolve => setTimeout(resolve, 0));
                     }
                 }
             }
