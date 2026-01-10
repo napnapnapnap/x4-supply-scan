@@ -18,7 +18,7 @@ It uses colors for different objects:
 * Yellow for abandoned ships
 * A silver ring for gates (clickable to navigate there)
 
-<img width="1697" height="818" alt="Screenshot_20251020_134915" src="https://github.com/user-attachments/assets/a0e41689-0966-44d3-b2fe-20125d3d3790" />
+<img width="1338" height="831" alt="Screenshot_20260110_102427" src="https://github.com/user-attachments/assets/a649a461-bec4-4771-902d-7196f07656fe" />
 
 ## How to use
 
