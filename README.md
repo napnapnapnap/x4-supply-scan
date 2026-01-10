@@ -31,6 +31,7 @@ It uses colors for different objects:
 
 ## Technical details
 
+* The save file is not modified
 * Everything runs in your browser - the save file is never uploaded to any server
 * Works with gzipped (.gz) or uncompressed (.xml) save files
 * When a new DLC is released, the x4-data-extractor.py script needs to be run again. The current DLC is Envoy.
