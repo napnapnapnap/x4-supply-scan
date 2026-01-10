@@ -24,7 +24,11 @@
                 </div>
                 <input type="text" id="sector-filter" placeholder="Filter sectors..." oninput="filterSectors(this.value)">
             </div>
-            <div id="plot">Please select a save file to get started</div>
+            <div id="plot">
+                <p>Please select a save file to get started</p>
+                <p class="save-path"><b>Windows:</b> %USERPROFILE%\Documents\Egosoft\X4\&lt;user-id&gt;\save\</p>
+                <p class="save-path"><b>Linux:</b> ~/.config/EgoSoft/X4/&lt;user-id&gt;/save/</p>
+            </div>
         </div>
         <script>
             function handleFileSelect(event) {

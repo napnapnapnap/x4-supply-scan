@@ -24,8 +24,6 @@ It uses colors for different objects:
 
 1. Open the application hosted on Github Pages or run a local webserver
 2. Click "Select Save" and select your save file
-   * Windows: `%USERPROFILE%\Documents\Egosoft\X4\<user-id>\save\<name>.xml.gz`
-   * Linux: `~/.config/EgoSoft/X4/<user-id>/save/<name>.xml.gz`
 3. Wait for the file to be parsed
 4. Click a sector on the left to show its 3D plot
 
