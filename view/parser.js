@@ -523,7 +523,7 @@ class X4SaveParser {
 
 // Load configuration files and set up the parser
 async function loadConfig() {
-    const basePath = window.location.pathname.replace(/\/[^\/]*$/, '');
+    const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '.';
     const rootPath = basePath.replace(/\/view$/, '');
     
     const fetchJson = async (url) => {

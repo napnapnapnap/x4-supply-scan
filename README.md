@@ -2,7 +2,7 @@
 
 A browser-based visualisation tool for X4 save files. Upload your save file and explore a 3D plot of every sector.
 
-**[Open X4 Vault Finder](https://fabian-flechtmann.github.io/x4-vault-finder/view)**
+**[Open X4 Vault Finder](https://fabian-flechtmann.github.io/x4-vault-finder)**
 
 It uses colors for different objects:
 
