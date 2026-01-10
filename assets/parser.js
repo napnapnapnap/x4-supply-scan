@@ -524,7 +524,6 @@ class X4SaveParser {
 // Load configuration files and set up the parser
 async function loadConfig() {
     const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '.';
-    const rootPath = basePath.replace(/\/view$/, '');
     
     const fetchJson = async (url) => {
         const response = await fetch(url);
@@ -535,10 +534,10 @@ async function loadConfig() {
     };
     
     const [sectorNames, shipNames, positions, strings] = await Promise.all([
-        fetchJson(`${rootPath}/x4-sector-names.json`),
-        fetchJson(`${rootPath}/x4-ship-names.json`),
-        fetchJson(`${rootPath}/x4-positions.json`),
-        fetchJson(`${rootPath}/x4-strings.json`)
+        fetchJson(`${basePath}/assets/x4-sector-names.json`),
+        fetchJson(`${basePath}/assets/x4-ship-names.json`),
+        fetchJson(`${basePath}/assets/x4-positions.json`),
+        fetchJson(`${basePath}/assets/x4-strings.json`)
     ]);
     
     return { sectorNames, shipNames, positions, strings };
