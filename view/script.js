@@ -236,7 +236,7 @@ function get_ship_points(objects) {
 function get_vault_points(objects) {
     let vault_objects = objects.filter(o => o["class"] == "datavault" || o["macro"].includes("_erlking_vault_"))
     let points = get_points(vault_objects)
-    points.name = "Datavaults"
+    points.name = "Vaults"
     return points
 }
 function get_title_point(objects, sector_id) {

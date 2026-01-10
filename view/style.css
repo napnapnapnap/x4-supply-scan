@@ -114,7 +114,7 @@ a.sector.active {
     font-weight: bold;
     border-radius: 4px;
     padding: 2px 4px;
-    margin: 2px 0px;
+    margin: 2px 2px 2px 0;
 }
 
 .blueprints {
