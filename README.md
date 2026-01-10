@@ -2,6 +2,8 @@
 
 A browser-based visualisation tool for X4 save files. Upload your save file and explore a 3D plot of every sector.
 
+**[Open X4 Vault Finder](https://fabian-flechtmann.github.io/x4-vault-finder/view)**
+
 It uses colors for different objects:
 
 * Vaults
@@ -20,17 +22,16 @@ It uses colors for different objects:
 
 ## How to use
 
-1. Open `view/index.html` in your browser (or host it on a web server)
-2. Click "Upload Save" and select your save file
+1. Open the application hosted on Github Pages or run a local webserver
+2. Click "Select Save" and select your save file
    * Windows: `%USERPROFILE%\Documents\Egosoft\X4\<user-id>\save\<name>.xml.gz`
    * Linux: `~/.config/EgoSoft/X4/<user-id>/save/<name>.xml.gz`
-3. Wait for the file to be parsed (progress is shown)
+3. Wait for the file to be parsed
 4. Click a sector on the left to show its 3D plot
 
 ## Technical details
 
-* Everything runs in your browser - your save file is never uploaded to any server
-* No installation required - just open the HTML file
+* Everything runs in your browser - the save file is never uploaded to any server
 * Works with gzipped (.gz) or uncompressed (.xml) save files
 * When a new DLC is released, the x4-data-extractor.py script needs to be run again. The current DLC is Envoy.
 * Thanks to the [X4-Info-Miner](https://github.com/TuxInvader/X4-Info-Miner) project for developing the inspirational x4-cat-miner.py script

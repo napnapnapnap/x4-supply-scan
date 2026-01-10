@@ -390,7 +390,7 @@ class X4SaveParser {
     async parse(file, onProgress) {
         this.onProgress = onProgress;
         
-        if (onProgress) onProgress('Reading file...');
+        if (onProgress) onProgress('Reading...');
         
         let xmlText;
         
@@ -408,11 +408,11 @@ class X4SaveParser {
             xmlText = await file.text();
         }
         
-        if (onProgress) onProgress('Parsing XML...');
+        if (onProgress) onProgress('Parsing...');
         
         await this.parseXML(xmlText, onProgress);
         
-        if (onProgress) onProgress('Processing gate connections...');
+        if (onProgress) onProgress('Finishing...');
         this.writeGateTargetSectors();
         
         return this.data;
@@ -436,8 +436,8 @@ class X4SaveParser {
             if (done) break;
             chunks.push(value);
             totalSize += value.length;
-            if (onProgress && totalSize % (10 * 1024 * 1024) < value.length) {
-                onProgress(`Reading... ${Math.round(totalSize / 1024 / 1024)} MB`);
+            if (onProgress && totalSize % (5 * 1024 * 1024) < value.length) {
+                onProgress(`Reading ${Math.round(totalSize / 1024 / 1024)} MB`);
             }
         }
         
@@ -455,7 +455,6 @@ class X4SaveParser {
         const path = [];
         const len = xmlText.length;
         let lastProgress = -1;
-        let sectorCount = 0;
         
         const tagPattern = /<(\/?)([\w:-]+)([^>]*?)(\/?)>/g;
         
@@ -489,11 +488,6 @@ class X4SaveParser {
                 this.maybeStoreObject(path);
                 this.maybeStoreResourceStart(path);
                 
-                // Track sector count for progress
-                if (tagName === 'component' && attrib['class'] === 'sector') {
-                    sectorCount++;
-                }
-                
                 if (selfClose === '/') {
                     // Self-closing tag, immediately close
                     this.maybeStoreSuperHighwayStep(path);
@@ -508,11 +502,9 @@ class X4SaveParser {
                 const progress = Math.floor(match.index / len * 100);
                 if (progress > lastProgress) {
                     lastProgress = progress;
-                    onProgress(`Parsing save... ${progress}% (${sectorCount} sectors)`);
-                    // Yield to UI every few percent to keep it responsive
-                    if (progress % 3 === 0) {
-                        await new Promise(resolve => setTimeout(resolve, 0));
-                    }
+                    onProgress(`Parsing... ${progress}%`);
+                    // Yield to UI every percent to keep it responsive
+                    await new Promise(resolve => setTimeout(resolve, 0));
                 }
             }
         }
@@ -583,19 +575,17 @@ async function handleFileUpload(file) {
             return;
         }
         
-        statusEl.textContent = `Found ${sectorCount} sectors. Updating display...`;
-        
         // Update global data and refresh UI
         window.data = newData;
         updateSidebar();
         
-        statusEl.textContent = `Loaded ${sectorCount} sectors successfully!`;
-        statusEl.style.color = '#4a9eff';
+        // Show the filter input
+        const filterInput = document.getElementById('sector-filter');
+        if (filterInput) {
+            filterInput.style.display = 'block';
+        }
         
-        // Hide progress after a short delay so user sees success message
-        setTimeout(() => {
-            progressEl.style.display = 'none';
-        }, 2000);
+        progressEl.style.display = 'none';
         
     } catch (error) {
         console.error('Error parsing save file:', error);
@@ -611,6 +601,12 @@ function updateSidebar() {
     const existingSectors = sidebar.querySelectorAll('.sector');
     existingSectors.forEach(el => el.remove());
     
+    // Clear the filter
+    const filterInput = document.getElementById('sector-filter');
+    if (filterInput) {
+        filterInput.value = '';
+    }
+    
     // Clear the plot
     const plotDiv = document.getElementById('plot');
     plotDiv.innerHTML = 'Please select a sector from the list';
@@ -623,16 +619,37 @@ function updateSidebar() {
     // Add sector links
     for (const { id: sectorId, name: sectorName } of sectorNames) {
         const sectorData = window.data.sectors[sectorId];
+        const tags = [
+            maybe_loot_tag(sectorData),
+            maybe_ship_tag(sectorData),
+            maybe_khaak_tag(sectorData),
+            maybe_headquarter_tag(sectorData),
+            maybe_unexplored_tag(sectorData)
+        ].join('');
+        
+        // Create searchable text from name and tag contents
+        const searchText = (sectorName + ' ' + tags.replace(/<[^>]*>/g, ' ')).toLowerCase();
+        
         const html = `
-        <a class="sector" id="${sectorId}" onclick="show('${sectorId}')">
+        <a class="sector" id="${sectorId}" onclick="show('${sectorId}')" data-search="${searchText}">
         ${sectorName}
-        ${maybe_loot_tag(sectorData)}
-        ${maybe_ship_tag(sectorData)}
-        ${maybe_khaak_tag(sectorData)}
-        ${maybe_headquarter_tag(sectorData)}
-        ${maybe_unexplored_tag(sectorData)}
+        ${tags}
         </a>
         `;
         sidebar.insertAdjacentHTML('beforeend', html);
     }
+}
+
+function filterSectors(query) {
+    const normalizedQuery = query.toLowerCase().trim();
+    const sectors = document.querySelectorAll('.sector');
+    
+    sectors.forEach(sector => {
+        const searchText = sector.getAttribute('data-search') || '';
+        if (normalizedQuery === '' || searchText.includes(normalizedQuery)) {
+            sector.classList.remove('hidden');
+        } else {
+            sector.classList.add('hidden');
+        }
+    });
 }

@@ -1,26 +1,30 @@
 <!DOCTYPE html>
-<html>
-    <header>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>X4 Vault Finder</title>
         <script type="text/javascript" src="plotly-3.1.1.min.js"></script>
         <script type="text/javascript" src="parser.js"></script>
         <script type="text/javascript" src="script.js"></script>
         <link rel="stylesheet" href="style.css">
-    </header>
+    </head>
     <body>
         <div id="wrapper">
             <div id="sidebar">
                 <a href="https://github.com/fabian-flechtmann/x4-vault-finder" id="title">X4 Vault Finder</a>
                 <div id="upload-container">
                     <label for="file-upload" class="upload-button">
-                        Upload Save
+                        Select Save
                     </label>
                     <input type="file" id="file-upload" accept=".gz,.xml" onchange="handleFileSelect(event)">
                     <div id="upload-progress">
                         <span id="upload-status">Ready</span>
                     </div>
                 </div>
+                <input type="text" id="sector-filter" placeholder="Filter sectors..." oninput="filterSectors(this.value)">
             </div>
-            <div id="plot">Please upload a save file to get started</div>
+            <div id="plot">Please select a save file to get started</div>
         </div>
         <script>
             function handleFileSelect(event) {
