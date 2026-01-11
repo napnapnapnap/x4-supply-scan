@@ -17,8 +17,10 @@ class X4SaveParser {
         this.lastExitgateId = null;
         this.superHighwayStep = {};
         
+        // Pre-compiled regexes (avoids repeated allocations)
         this.REFERENCE = /\{(\d*),\s*(\d+)\}/g;
         this.PARENTHESES = /^(.*)\([^)]*\)(.*)$/;
+        this.ATTR_PATTERN = /([\w-]+)="([^"]*)"/g;
     }
 
     resolveName(s) {
@@ -30,18 +32,14 @@ class X4SaveParser {
             
             const left = s.substring(0, matchObj.index);
             const right = s.substring(matchObj.index + matchObj[0].length);
-            const first = matchObj[1] !== '' ? matchObj[1] : this.pageId;
+            const first = matchObj[1] || '20';  // Default page ID for X4 strings
             const second = matchObj[2];
             const tag = `${first},${second}`;
             
             let replacement = '';
             if (!seen.has(tag)) {
                 seen.add(tag);
-                try {
-                    replacement = this.strings[first]?.[second] || '';
-                } catch (e) {
-                    replacement = '';
-                }
+                replacement = this.strings[first]?.[second] || '';
             }
             s = left + replacement + right;
         }
@@ -60,16 +58,19 @@ class X4SaveParser {
         return this.resolveName(rawName);
     }
 
-    getSectorName(sectorId) {
-        const rawName = this.sectorNames[this.currentSector] || this.currentSector;
+    getSectorName(sectorMacro) {
+        const rawName = this.sectorNames[sectorMacro] || sectorMacro;
         return this.resolveName(rawName);
     }
 
-    isAt(path, expected) {
-        const expectedParts = expected.split('/');
-        if (path.length < expectedParts.length) return false;
-        const lastNPathElements = path.slice(-expectedParts.length);
-        return lastNPathElements.every((elem, i) => elem.tag === expectedParts[i]);
+    // Check if path ends with specific tag sequence (more efficient than string splitting)
+    isAtTags(path, ...tags) {
+        const n = tags.length;
+        if (path.length < n) return false;
+        for (let i = 0; i < n; i++) {
+            if (path[path.length - n + i].tag !== tags[i]) return false;
+        }
+        return true;
     }
 
     isSector(path) {
@@ -163,7 +164,7 @@ class X4SaveParser {
     }
 
     maybeStoreComponentPosition(path) {
-        if (this.isAt(path, 'component/offset/position')) {
+        if (this.isAtTags(path, 'component', 'offset', 'position')) {
             const last = path[path.length - 1];
             const x = parseFloat(last.attrib['x'] || '0');
             const y = parseFloat(last.attrib['y'] || '0');
@@ -174,7 +175,8 @@ class X4SaveParser {
     }
 
     maybeStoreObject(path) {
-        const attrib = path[path.length - 1].attrib;
+        const last = path[path.length - 1];
+        const attrib = last.attrib;
         
         if (this.isSector(path)) {
             this.currentSector = attrib['macro'];
@@ -184,13 +186,23 @@ class X4SaveParser {
                 objects: {},
                 resource_areas: []
             };
-        } else if (this.isStation(path) || this.isSectorGate(path) || this.isSuperHighwayGate(path) || this.isVault(path) || this.isAbandonedShip(path)) {
+            return;
+        }
+        
+        // Cache condition results to avoid repeated checks
+        const isStation = this.isStation(path);
+        const isSectorGate = this.isSectorGate(path);
+        const isSuperHighwayGate = this.isSuperHighwayGate(path);
+        const isVault = this.isVault(path);
+        const isAbandonedShip = this.isAbandonedShip(path);
+        
+        if (isStation || isSectorGate || isSuperHighwayGate || isVault || isAbandonedShip) {
             const code = attrib['code'];
             let macro;
             
-            if (this.isSectorGate(path)) {
+            if (isSectorGate) {
                 macro = (path[path.length - 2].attrib['connection'] || '').toLowerCase();
-            } else if (this.isAbandonedShip(path)) {
+            } else if (isAbandonedShip) {
                 macro = this.getShipName(attrib['macro'] || '');
             } else {
                 macro = attrib['macro'] || '';
@@ -198,27 +210,36 @@ class X4SaveParser {
             
             if (!this.data.sectors[this.currentSector]) return;
             
-            this.data.sectors[this.currentSector].objects[code] = {
+            const obj = {
                 class: attrib['class'] || '',
                 code: code,
                 macro: macro,
                 owner: attrib['owner'] || ''
             };
             
-            if (this.isStation(path) && path[path.length - 1].attrib['state'] === 'wreck') {
-                this.data.sectors[this.currentSector].objects[code].is_wreck = true;
+            if (isStation && attrib['state'] === 'wreck') {
+                obj.is_wreck = true;
             }
-            if (this.isVault(path)) {
-                this.data.sectors[this.currentSector].objects[code].has_blueprints = false;
-                this.data.sectors[this.currentSector].objects[code].has_signalleak = false;
-                this.data.sectors[this.currentSector].objects[code].has_wares = false;
+            if (isVault) {
+                obj.has_blueprints = false;
+                obj.has_signalleak = false;
+                obj.has_wares = false;
             }
-            if (this.isSectorGate(path) || this.isSuperHighwayGate(path)) {
-                this.data.sectors[this.currentSector].objects[code].is_active = true;
+            if (isSectorGate || isSuperHighwayGate) {
+                obj.is_active = true;
             }
-            if (this.isStation(path) && path[path.length - 1].attrib['factionheadquarters'] === '1') {
-                this.data.sectors[this.currentSector].objects[code].is_headquarter = true;
+            if (isStation && attrib['factionheadquarters'] === '1') {
+                obj.is_headquarter = true;
             }
+            
+            this.data.sectors[this.currentSector].objects[code] = obj;
+            
+            // Store type flags for position calculation
+            last._isStation = isStation;
+            last._isSectorGate = isSectorGate;
+            last._isSuperHighwayGate = isSuperHighwayGate;
+            last._isVault = isVault;
+            last._isAbandonedShip = isAbandonedShip;
         } else if (this.isVaultLoot(path)) {
             const vaultCode = path[path.length - 4].attrib['code'];
             const clazz = path[path.length - 1].attrib['class'] || '';
@@ -274,52 +295,55 @@ class X4SaveParser {
     }
 
     maybeStorePosition(path) {
-        if (!(this.isStation(path) || this.isSectorGate(path) || this.isSuperHighwayGate(path) || this.isVault(path) || this.isAbandonedShip(path))) {
+        const last = path[path.length - 1];
+        // Use cached flags from maybeStoreObject instead of recalculating
+        if (!(last._isStation || last._isSectorGate || last._isSuperHighwayGate || last._isVault || last._isAbandonedShip)) {
             return;
         }
         
-        const position = [0, 0, 0];
+        let x = 0, y = 0, z = 0;
         
+        // Single pass through path for both component and connection offsets
         for (const elem of path) {
-            if (elem.tag !== 'component') continue;
-            const code = elem.attrib['code'];
-            const p = this.componentPositions[code] || [0, 0, 0];
-            position[0] += p[0];
-            position[1] += p[1];
-            position[2] += p[2];
-            
-            const macro = elem.attrib['macro'] || null;
-            const offset = this.positions[macro];
-            if (offset) {
-                position[0] += offset.x;
-                position[1] += offset.y;
-                position[2] += offset.z;
+            if (elem.tag === 'component') {
+                const code = elem.attrib['code'];
+                const p = this.componentPositions[code];
+                if (p) {
+                    x += p[0];
+                    y += p[1];
+                    z += p[2];
+                }
+                
+                const macro = elem.attrib['macro'];
+                const offset = macro && this.positions[macro];
+                if (offset) {
+                    x += offset.x;
+                    y += offset.y;
+                    z += offset.z;
+                }
+            } else if (elem.tag === 'connection') {
+                const gateId = elem.attrib['connection'];
+                if (gateId?.startsWith('connection_clustergate')) {
+                    const offset = this.positions[gateId];
+                    if (offset) {
+                        x += offset.x;
+                        y += offset.y;
+                        z += offset.z;
+                    }
+                }
             }
         }
         
-        for (const elem of path) {
-            if (elem.tag !== 'connection') continue;
-            const gateId = elem.attrib['connection'] || null;
-            if (gateId === null || !gateId.startsWith('connection_clustergate')) continue;
-            
-            const offset = this.positions[gateId];
-            if (offset) {
-                position[0] += offset.x;
-                position[1] += offset.y;
-                position[2] += offset.z;
-            }
-        }
-        
-        const code = path[path.length - 1].attrib['code'];
-        if (this.data.sectors[this.currentSector]?.objects[code]) {
-            this.data.sectors[this.currentSector].objects[code].x = position[0];
-            this.data.sectors[this.currentSector].objects[code].y = position[1];
-            this.data.sectors[this.currentSector].objects[code].z = position[2];
+        const obj = this.data.sectors[this.currentSector]?.objects[last.attrib['code']];
+        if (obj) {
+            obj.x = x;
+            obj.y = y;
+            obj.z = z;
         }
     }
 
     maybeStoreResourceStart(path) {
-        if (this.isAt(path, 'resourceareas/area')) {
+        if (this.isAtTags(path, 'resourceareas', 'area')) {
             const last = path[path.length - 1];
             this.currentResourceArea = {
                 x: parseInt(last.attrib['x'] || '0'),
@@ -327,27 +351,29 @@ class X4SaveParser {
                 z: parseInt(last.attrib['z'] || '0'),
                 resources: {}
             };
-        } else if (this.isAt(path, 'resourceareas/area/wares/ware/recharge')) {
-            const resourceName = path[path.length - 2].attrib['ware'];
-            if (!this.currentResourceArea.resources[resourceName]) {
-                this.currentResourceArea.resources[resourceName] = {};
+        } else if (this.currentResourceArea) {
+            // Only check these if we're inside a resource area
+            if (this.isAtTags(path, 'resourceareas', 'area', 'wares', 'ware', 'recharge')) {
+                const resourceName = path[path.length - 2].attrib['ware'];
+                if (!this.currentResourceArea.resources[resourceName]) {
+                    this.currentResourceArea.resources[resourceName] = {};
+                }
+                const last = path[path.length - 1];
+                const rechargeMax = parseInt(last.attrib['max'] || '0');
+                const rechargeCurrent = last.attrib['current'];
+                
+                this.currentResourceArea.resources[resourceName].recharge_max = rechargeMax;
+                this.currentResourceArea.resources[resourceName].recharge_current = 
+                    rechargeCurrent === undefined ? rechargeMax : parseInt(rechargeCurrent);
+                this.currentResourceArea.resources[resourceName].recharge_time = parseInt(last.attrib['time'] || '0');
+            } else if (this.isAtTags(path, 'resourceareas', 'area', 'yields', 'ware', 'yield')) {
+                const resourceName = path[path.length - 2].attrib['ware'];
+                if (!this.currentResourceArea.resources[resourceName]) {
+                    this.currentResourceArea.resources[resourceName] = {};
+                }
+                this.currentResourceArea.resources[resourceName].yield = 
+                    path[path.length - 1].attrib['name'] || '';
             }
-            const last = path[path.length - 1];
-            const rechargeMax = parseInt(last.attrib['max'] || '0');
-            const rechargeCurrent = last.attrib['current'];
-            const rechargeTime = parseInt(last.attrib['time'] || '0');
-            
-            this.currentResourceArea.resources[resourceName].recharge_max = rechargeMax;
-            this.currentResourceArea.resources[resourceName].recharge_current = 
-                rechargeCurrent === undefined ? rechargeMax : parseInt(rechargeCurrent);
-            this.currentResourceArea.resources[resourceName].recharge_time = rechargeTime;
-        } else if (this.isAt(path, 'resourceareas/area/yields/ware/yield')) {
-            const resourceName = path[path.length - 2].attrib['ware'];
-            if (!this.currentResourceArea.resources[resourceName]) {
-                this.currentResourceArea.resources[resourceName] = {};
-            }
-            this.currentResourceArea.resources[resourceName].yield = 
-                path[path.length - 1].attrib['name'] || '';
         }
     }
 
@@ -386,20 +412,21 @@ class X4SaveParser {
         const path = [];
         const len = xmlText.length;
         let lastProgress = -1;
+        let tagCount = 0;
         
         const tagPattern = /<(\/?)([\w:-]+)([^>]*?)(\/?)>/g;
         
         let match;
         
         while ((match = tagPattern.exec(xmlText)) !== null) {
-            const [fullMatch, closeSlash, tagName, attrString, selfClose] = match;
+            const [, closeSlash, tagName, attrString, selfClose] = match;
             
             // Skip XML declarations, comments, CDATA, DOCTYPE
-            if (tagName.startsWith('?') || tagName.startsWith('!')) {
+            if (tagName.charCodeAt(0) === 63 || tagName.charCodeAt(0) === 33) { // '?' or '!'
                 continue;
             }
             
-            if (closeSlash === '/') {
+            if (closeSlash) {
                 // Closing tag
                 if (path.length > 0) {
                     this.maybeStoreSuperHighwayStep(path);
@@ -417,7 +444,7 @@ class X4SaveParser {
                 this.maybeStoreObject(path);
                 this.maybeStoreResourceStart(path);
                 
-                if (selfClose === '/') {
+                if (selfClose) {
                     // Self-closing tag, immediately close
                     this.maybeStoreSuperHighwayStep(path);
                     this.maybeStorePosition(path);
@@ -426,20 +453,22 @@ class X4SaveParser {
                 }
             }
             
-            // Progress reporting
-            const progress = Math.floor(match.index / len * 100);
-            if (progress > lastProgress) {
-                lastProgress = progress;
-                onProgress(progress);
+            // Progress reporting (check every 10000 tags to reduce overhead)
+            if (++tagCount % 10000 === 0) {
+                const progress = Math.floor(match.index / len * 100);
+                if (progress > lastProgress) {
+                    lastProgress = progress;
+                    onProgress(progress);
+                }
             }
         }
     }
 
     parseAttributes(attrString) {
         const attrib = {};
-        const attrPattern = /([\w-]+)="([^"]*)"/g;
+        this.ATTR_PATTERN.lastIndex = 0;
         let match;
-        while ((match = attrPattern.exec(attrString)) !== null) {
+        while ((match = this.ATTR_PATTERN.exec(attrString)) !== null) {
             attrib[match[1]] = match[2];
         }
         return attrib;
@@ -500,8 +529,13 @@ self.onmessage = async function(e) {
                 config.strings
             );
             
+            let lastReportedProgress = -1;
             parser.parseXML(xmlText, (progress) => {
-                self.postMessage({ type: 'progress', status: `Parsing... ${progress}%` });
+                // Only report every 5% to reduce message overhead
+                if (progress >= lastReportedProgress + 5) {
+                    lastReportedProgress = progress;
+                    self.postMessage({ type: 'progress', status: `Parsing... ${progress}%` });
+                }
             });
             
             // Post-processing
