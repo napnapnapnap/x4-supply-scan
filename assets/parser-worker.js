@@ -1,4 +1,7 @@
 // X4 Save File Parser - Web Worker
+// Uses sax.js for proper XML parsing
+
+importScripts('sax.js');
 
 class X4SaveParser {
     constructor(sectorNames, shipNames, positions, strings) {
@@ -17,10 +20,9 @@ class X4SaveParser {
         this.lastExitgateId = null;
         this.superHighwayStep = {};
         
-        // Pre-compiled regexes (avoids repeated allocations)
+        // Pre-compiled regexes for name resolution
         this.REFERENCE = /\{(\d*),\s*(\d+)\}/g;
         this.PARENTHESES = /^(.*)\([^)]*\)(.*)$/;
-        this.ATTR_PATTERN = /([\w-]+)="([^"]*)"/g;
     }
 
     resolveName(s) {
@@ -63,32 +65,32 @@ class X4SaveParser {
         return this.resolveName(rawName);
     }
 
-    // Check if path ends with specific tag sequence (more efficient than string splitting)
+    // Check if path ends with specific tag sequence
     isAtTags(path, ...tags) {
         const n = tags.length;
         if (path.length < n) return false;
         for (let i = 0; i < n; i++) {
-            if (path[path.length - n + i].tag !== tags[i]) return false;
+            if (path[path.length - n + i].name !== tags[i]) return false;
         }
         return true;
     }
 
     isSector(path) {
         const last = path[path.length - 1];
-        return last.tag === 'component' && last.attrib['class'] === 'sector';
+        return last.name === 'component' && last.attributes.class === 'sector';
     }
 
     isStation(path) {
         const last = path[path.length - 1];
-        return last.tag === 'component' && last.attrib['class'] === 'station';
+        return last.name === 'component' && last.attributes.class === 'station';
     }
 
     isAbandonedShip(path) {
         const last = path[path.length - 1];
         return (
-            last.tag === 'component' &&
-            (last.attrib['class'] || '').startsWith('ship_') &&
-            last.attrib['owner'] === 'ownerless'
+            last.name === 'component' &&
+            (last.attributes.class || '').startsWith('ship_') &&
+            last.attributes.owner === 'ownerless'
         );
     }
 
@@ -96,35 +98,35 @@ class X4SaveParser {
         const last = path[path.length - 1];
         const secondLast = path[path.length - 2];
         return (
-            last.tag === 'component' &&
-            secondLast?.tag === 'connection' &&
-            (secondLast.attrib['connection'] || '').startsWith('connection_clustergate')
+            last.name === 'component' &&
+            secondLast?.name === 'connection' &&
+            (secondLast.attributes.connection || '').startsWith('connection_clustergate')
         );
     }
 
     isSuperHighwayGate(path) {
         const last = path[path.length - 1];
         return (
-            last.tag === 'component' &&
-            ['highwayentrygate', 'highwayexitgate'].includes(last.attrib['class'] || '') &&
-            (last.attrib['macro'] || '').includes('superhighway')
+            last.name === 'component' &&
+            ['highwayentrygate', 'highwayexitgate'].includes(last.attributes.class || '') &&
+            (last.attributes.macro || '').includes('superhighway')
         );
     }
 
     isVault(path) {
         const last = path[path.length - 1];
-        return last.tag === 'component' && (
-            last.attrib['class'] === 'datavault' ||
-            (last.attrib['macro'] || '').includes('erlking_vault')
+        return last.name === 'component' && (
+            last.attributes.class === 'datavault' ||
+            (last.attributes.macro || '').includes('erlking_vault')
         );
     }
 
     isVaultLoot(path) {
         if (path.length < 4) return false;
         const last = path[path.length - 1];
-        const clazz = last.attrib['class'] || '';
+        const clazz = last.attributes.class || '';
         return (
-            last.tag === 'component' &&
+            last.name === 'component' &&
             ['collectablewares', 'collectableblueprints', 'signalleak'].includes(clazz) &&
             this.isVault(path.slice(0, -3))
         );
@@ -135,29 +137,29 @@ class X4SaveParser {
         const secondLast = path[path.length - 2];
         
         return (
-            (last.tag === 'connected' &&
-             ((secondLast?.attrib['connection'] || '') === 'destination' ||
-              (secondLast?.attrib['connection'] || '').startsWith('clustergate')) &&
+            (last.name === 'connected' &&
+             ((secondLast?.attributes.connection || '') === 'destination' ||
+              (secondLast?.attributes.connection || '').startsWith('clustergate')) &&
              this.isSectorGate(path.slice(0, -3)))
         ) || (
-            last.tag === 'connected' &&
+            last.name === 'connected' &&
             this.isSuperHighwayGate(path.slice(0, -3))
         );
     }
 
     isSuperHighwayStepEntry(path) {
         const last = path[path.length - 1];
-        return last.tag === 'connection' && last.attrib['connection'] === 'entrygate';
+        return last.name === 'connection' && last.attributes.connection === 'entrygate';
     }
 
     isSuperHighwayStepExit(path) {
         const last = path[path.length - 1];
-        return last.tag === 'connection' && last.attrib['connection'] === 'exitgate';
+        return last.name === 'connection' && last.attributes.connection === 'exitgate';
     }
 
     isGateActivity(path) {
         const last = path[path.length - 1];
-        return last.tag === 'object' && (
+        return last.name === 'object' && (
             this.isSectorGate(path.slice(0, -1)) ||
             this.isSuperHighwayGate(path.slice(0, -1))
         );
@@ -166,23 +168,23 @@ class X4SaveParser {
     maybeStoreComponentPosition(path) {
         if (this.isAtTags(path, 'component', 'offset', 'position')) {
             const last = path[path.length - 1];
-            const x = parseFloat(last.attrib['x'] || '0');
-            const y = parseFloat(last.attrib['y'] || '0');
-            const z = parseFloat(last.attrib['z'] || '0');
-            const code = path[path.length - 3].attrib['code'];
+            const x = parseFloat(last.attributes.x || '0');
+            const y = parseFloat(last.attributes.y || '0');
+            const z = parseFloat(last.attributes.z || '0');
+            const code = path[path.length - 3].attributes.code;
             this.componentPositions[code] = [x, y, z];
         }
     }
 
     maybeStoreObject(path) {
         const last = path[path.length - 1];
-        const attrib = last.attrib;
+        const attrib = last.attributes;
         
         if (this.isSector(path)) {
-            this.currentSector = attrib['macro'];
+            this.currentSector = attrib.macro;
             this.data.sectors[this.currentSector] = {
                 name: this.getSectorName(this.currentSector),
-                is_known: attrib['known'] === '1' || attrib['knownto'] === 'player',
+                is_known: attrib.known === '1' || attrib.knownto === 'player',
                 objects: {},
                 resource_areas: []
             };
@@ -197,27 +199,27 @@ class X4SaveParser {
         const isAbandonedShip = this.isAbandonedShip(path);
         
         if (isStation || isSectorGate || isSuperHighwayGate || isVault || isAbandonedShip) {
-            const code = attrib['code'];
+            const code = attrib.code;
             let macro;
             
             if (isSectorGate) {
-                macro = (path[path.length - 2].attrib['connection'] || '').toLowerCase();
+                macro = (path[path.length - 2].attributes.connection || '').toLowerCase();
             } else if (isAbandonedShip) {
-                macro = this.getShipName(attrib['macro'] || '');
+                macro = this.getShipName(attrib.macro || '');
             } else {
-                macro = attrib['macro'] || '';
+                macro = attrib.macro || '';
             }
             
             if (!this.data.sectors[this.currentSector]) return;
             
             const obj = {
-                class: attrib['class'] || '',
+                class: attrib.class || '',
                 code: code,
                 macro: macro,
-                owner: attrib['owner'] || ''
+                owner: attrib.owner || ''
             };
             
-            if (isStation && attrib['state'] === 'wreck') {
+            if (isStation && attrib.state === 'wreck') {
                 obj.is_wreck = true;
             }
             if (isVault) {
@@ -228,21 +230,14 @@ class X4SaveParser {
             if (isSectorGate || isSuperHighwayGate) {
                 obj.is_active = true;
             }
-            if (isStation && attrib['factionheadquarters'] === '1') {
+            if (isStation && attrib.factionheadquarters === '1') {
                 obj.is_headquarter = true;
             }
             
             this.data.sectors[this.currentSector].objects[code] = obj;
-            
-            // Store type flags for position calculation
-            last._isStation = isStation;
-            last._isSectorGate = isSectorGate;
-            last._isSuperHighwayGate = isSuperHighwayGate;
-            last._isVault = isVault;
-            last._isAbandonedShip = isAbandonedShip;
         } else if (this.isVaultLoot(path)) {
-            const vaultCode = path[path.length - 4].attrib['code'];
-            const clazz = path[path.length - 1].attrib['class'] || '';
+            const vaultCode = path[path.length - 4].attributes.code;
+            const clazz = path[path.length - 1].attributes.class || '';
             
             if (!this.data.sectors[this.currentSector]?.objects[vaultCode]) return;
             
@@ -257,12 +252,12 @@ class X4SaveParser {
             }
         } else if (this.isGateConnected(path)) {
             const gateComponent = path[path.length - 4];
-            const code = gateComponent.attrib['code'];
-            const clazz = gateComponent.attrib['class'];
+            const code = gateComponent.attributes.code;
+            const clazz = gateComponent.attributes.class;
             const connection = path[path.length - 2];
-            const outerId = connection.attrib['id'];
+            const outerId = connection.attributes.id;
             const connected = path[path.length - 1];
-            const innerId = connected.attrib['connection'];
+            const innerId = connected.attributes.connection;
             
             this.sectorMacroOfConnectionId[innerId] = this.currentSector;
             
@@ -274,71 +269,72 @@ class X4SaveParser {
                 this.data.sectors[this.currentSector].objects[code].target_id = innerId;
             }
         } else if (this.isSuperHighwayStepEntry(path)) {
-            this.lastEntrygateId = path[path.length - 1].attrib['id'];
+            this.lastEntrygateId = path[path.length - 1].attributes.id;
         } else if (this.isSuperHighwayStepExit(path)) {
-            this.lastExitgateId = path[path.length - 1].attrib['id'];
+            this.lastExitgateId = path[path.length - 1].attributes.id;
         } else if (this.isGateActivity(path)) {
-            const code = path[path.length - 2].attrib['code'];
+            const code = path[path.length - 2].attributes.code;
             if (this.data.sectors[this.currentSector]?.objects[code]) {
                 this.data.sectors[this.currentSector].objects[code].is_active = 
-                    path[path.length - 1].attrib['active'] !== '0';
+                    path[path.length - 1].attributes.active !== '0';
             }
         }
     }
 
     maybeStoreSuperHighwayStep(path) {
         const last = path[path.length - 1];
-        if (last.tag !== 'component' || last.attrib['class'] !== 'highway') return;
+        if (last.name !== 'component' || last.attributes.class !== 'highway') return;
         
         this.superHighwayStep[this.lastEntrygateId] = this.lastExitgateId;
         this.superHighwayStep[this.lastExitgateId] = this.lastEntrygateId;
     }
 
     maybeStorePosition(path) {
-        const last = path[path.length - 1];
-        // Use cached flags from maybeStoreObject instead of recalculating
-        if (!(last._isStation || last._isSectorGate || last._isSuperHighwayGate || last._isVault || last._isAbandonedShip)) {
+        // Match Python: recalculate conditions (don't rely on cached flags)
+        if (!(this.isStation(path) || this.isSectorGate(path) || this.isSuperHighwayGate(path) || this.isVault(path) || this.isAbandonedShip(path))) {
             return;
         }
         
-        let x = 0, y = 0, z = 0;
+        const position = [0, 0, 0];
         
-        // Single pass through path for both component and connection offsets
+        // First pass: component positions and macro offsets
         for (const elem of path) {
-            if (elem.tag === 'component') {
-                const code = elem.attrib['code'];
-                const p = this.componentPositions[code];
-                if (p) {
-                    x += p[0];
-                    y += p[1];
-                    z += p[2];
-                }
-                
-                const macro = elem.attrib['macro'];
-                const offset = macro && this.positions[macro];
-                if (offset) {
-                    x += offset.x;
-                    y += offset.y;
-                    z += offset.z;
-                }
-            } else if (elem.tag === 'connection') {
-                const gateId = elem.attrib['connection'];
-                if (gateId?.startsWith('connection_clustergate')) {
-                    const offset = this.positions[gateId];
-                    if (offset) {
-                        x += offset.x;
-                        y += offset.y;
-                        z += offset.z;
-                    }
-                }
+            if (elem.name !== 'component') continue;
+            const code = elem.attributes.code;
+            const p = this.componentPositions[code] || [0, 0, 0];
+            position[0] += p[0];
+            position[1] += p[1];
+            position[2] += p[2];
+            
+            const macro = elem.attributes.macro || null;
+            const offset = this.positions[macro];
+            if (offset) {
+                position[0] += offset.x;
+                position[1] += offset.y;
+                position[2] += offset.z;
             }
         }
         
-        const obj = this.data.sectors[this.currentSector]?.objects[last.attrib['code']];
-        if (obj) {
-            obj.x = x;
-            obj.y = y;
-            obj.z = z;
+        // Second pass: connection gate offsets
+        for (const elem of path) {
+            if (elem.name !== 'connection') continue;
+            const gateId = elem.attributes.connection || null;
+            if (gateId === null || !gateId.startsWith('connection_clustergate')) continue;
+            
+            const offset = this.positions[gateId];
+            if (offset) {
+                position[0] += offset.x;
+                position[1] += offset.y;
+                position[2] += offset.z;
+            }
+        }
+        
+        const last = path[path.length - 1];
+        const code = last.attributes.code;
+        if (this.data.sectors[this.currentSector]?.objects[code]) {
+            this.data.sectors[this.currentSector].objects[code].x = position[0];
+            this.data.sectors[this.currentSector].objects[code].y = position[1];
+            this.data.sectors[this.currentSector].objects[code].z = position[2];
         }
     }
 
@@ -346,33 +342,33 @@ class X4SaveParser {
         if (this.isAtTags(path, 'resourceareas', 'area')) {
             const last = path[path.length - 1];
             this.currentResourceArea = {
-                x: parseInt(last.attrib['x'] || '0'),
-                y: parseInt(last.attrib['y'] || '0'),
-                z: parseInt(last.attrib['z'] || '0'),
+                x: parseInt(last.attributes.x || '0'),
+                y: parseInt(last.attributes.y || '0'),
+                z: parseInt(last.attributes.z || '0'),
                 resources: {}
             };
         } else if (this.currentResourceArea) {
             // Only check these if we're inside a resource area
             if (this.isAtTags(path, 'resourceareas', 'area', 'wares', 'ware', 'recharge')) {
-                const resourceName = path[path.length - 2].attrib['ware'];
+                const resourceName = path[path.length - 2].attributes.ware;
                 if (!this.currentResourceArea.resources[resourceName]) {
                     this.currentResourceArea.resources[resourceName] = {};
                 }
                 const last = path[path.length - 1];
-                const rechargeMax = parseInt(last.attrib['max'] || '0');
-                const rechargeCurrent = last.attrib['current'];
+                const rechargeMax = parseInt(last.attributes.max || '0');
+                const rechargeCurrent = last.attributes.current;
                 
                 this.currentResourceArea.resources[resourceName].recharge_max = rechargeMax;
                 this.currentResourceArea.resources[resourceName].recharge_current = 
                     rechargeCurrent === undefined ? rechargeMax : parseInt(rechargeCurrent);
-                this.currentResourceArea.resources[resourceName].recharge_time = parseInt(last.attrib['time'] || '0');
+                this.currentResourceArea.resources[resourceName].recharge_time = parseInt(last.attributes.time || '0');
             } else if (this.isAtTags(path, 'resourceareas', 'area', 'yields', 'ware', 'yield')) {
-                const resourceName = path[path.length - 2].attrib['ware'];
+                const resourceName = path[path.length - 2].attributes.ware;
                 if (!this.currentResourceArea.resources[resourceName]) {
                     this.currentResourceArea.resources[resourceName] = {};
                 }
                 this.currentResourceArea.resources[resourceName].yield = 
-                    path[path.length - 1].attrib['name'] || '';
+                    path[path.length - 1].attributes.name || '';
             }
         }
     }
@@ -381,7 +377,7 @@ class X4SaveParser {
         const last = path[path.length - 1];
         const secondLast = path[path.length - 2];
         
-        if (last.tag === 'area' && secondLast?.tag === 'resourceareas') {
+        if (last.name === 'area' && secondLast?.name === 'resourceareas') {
             if (this.currentResourceArea && this.data.sectors[this.currentSector]) {
                 this.data.sectors[this.currentSector].resource_areas.push(this.currentResourceArea);
             }
@@ -409,69 +405,56 @@ class X4SaveParser {
     }
 
     parseXML(xmlText, onProgress) {
+        // Non-strict mode with lowercase to normalize tag/attribute names
+        const parser = sax.parser(false, { lowercase: true, position: false });
         const path = [];
         const len = xmlText.length;
         let lastProgress = -1;
-        let tagCount = 0;
         
-        const tagPattern = /<(\/?)([\w:-]+)([^>]*?)(\/?)>/g;
+        const self = this;
         
-        let match;
-        
-        while ((match = tagPattern.exec(xmlText)) !== null) {
-            const [, closeSlash, tagName, attrString, selfClose] = match;
+        // On tag open: push to path, run start handlers
+        // Note: SAX calls both onopentag and onclosetag for self-closing tags,
+        // just like Python's iterparse fires both 'start' and 'end' events.
+        // So we handle everything in the respective callbacks, not specially for self-closing.
+        parser.onopentag = function(node) {
+            path.push(node);
             
-            // Skip XML declarations, comments, CDATA, DOCTYPE
-            if (tagName.charCodeAt(0) === 63 || tagName.charCodeAt(0) === 33) { // '?' or '!'
-                continue;
+            self.maybeStoreComponentPosition(path);
+            self.maybeStoreObject(path);
+            self.maybeStoreResourceStart(path);
+        };
+        
+        // On tag close: run end handlers, pop from path
+        parser.onclosetag = function(tagName) {
+            if (path.length > 0) {
+                self.maybeStoreSuperHighwayStep(path);
+                self.maybeStorePosition(path);
+                self.maybeStoreResourceEnd(path);
+                path.pop();
             }
+        };
+        
+        parser.onerror = function(err) {
+            console.error('SAX parser error:', err);
+            // Continue parsing despite errors
+            parser.resume();
+        };
+        
+        // Parse in smaller chunks for smoother progress reporting
+        const chunkSize = 256 * 1024; // 256KB chunks for more frequent updates
+        for (let i = 0; i < len; i += chunkSize) {
+            const chunk = xmlText.substring(i, Math.min(i + chunkSize, len));
+            parser.write(chunk);
             
-            if (closeSlash) {
-                // Closing tag
-                if (path.length > 0) {
-                    this.maybeStoreSuperHighwayStep(path);
-                    this.maybeStorePosition(path);
-                    this.maybeStoreResourceEnd(path);
-                    path.pop();
-                }
-            } else {
-                // Opening tag
-                const attrib = this.parseAttributes(attrString);
-                const element = { tag: tagName, attrib };
-                path.push(element);
-                
-                this.maybeStoreComponentPosition(path);
-                this.maybeStoreObject(path);
-                this.maybeStoreResourceStart(path);
-                
-                if (selfClose) {
-                    // Self-closing tag, immediately close
-                    this.maybeStoreSuperHighwayStep(path);
-                    this.maybeStorePosition(path);
-                    this.maybeStoreResourceEnd(path);
-                    path.pop();
-                }
-            }
-            
-            // Progress reporting (check every 10000 tags to reduce overhead)
-            if (++tagCount % 10000 === 0) {
-                const progress = Math.floor(match.index / len * 100);
-                if (progress > lastProgress) {
-                    lastProgress = progress;
-                    onProgress(progress);
-                }
+            const progress = Math.floor(i / len * 100);
+            if (progress > lastProgress) {
+                lastProgress = progress;
+                onProgress(progress);
             }
         }
-    }
-
-    parseAttributes(attrString) {
-        const attrib = {};
-        this.ATTR_PATTERN.lastIndex = 0;
-        let match;
-        while ((match = this.ATTR_PATTERN.exec(attrString)) !== null) {
-            attrib[match[1]] = match[2];
-        }
-        return attrib;
+        
+        parser.close();
     }
 }
 
@@ -529,13 +512,8 @@ self.onmessage = async function(e) {
                 config.strings
             );
             
-            let lastReportedProgress = -1;
             parser.parseXML(xmlText, (progress) => {
-                // Only report every 5% to reduce message overhead
-                if (progress >= lastReportedProgress + 5) {
-                    lastReportedProgress = progress;
-                    self.postMessage({ type: 'progress', status: `Parsing... ${progress}%` });
-                }
+                self.postMessage({ type: 'progress', status: `Parsing... ${progress}%` });
             });
             
             // Post-processing
@@ -550,4 +528,3 @@ self.onmessage = async function(e) {
         }
     }
 };
-
