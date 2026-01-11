@@ -1,7 +1,10 @@
 // X4 Save File Parser - Web Worker
 // Uses sax.js for proper XML parsing
 
-importScripts('sax.js');
+// Construct absolute path to sax.js based on this worker's location
+// This ensures cross-browser compatibility (Chrome/Edge resolve paths differently than Firefox)
+const workerPath = self.location.href.substring(0, self.location.href.lastIndexOf('/') + 1);
+importScripts(workerPath + 'sax.js');
 
 class X4SaveParser {
     constructor(sectorNames, shipNames, positions, strings) {
@@ -404,20 +407,16 @@ class X4SaveParser {
         }
     }
 
-    parseXML(xmlText, onProgress) {
-        // Non-strict mode with lowercase to normalize tag/attribute names
+    // Creates and configures a SAX parser with handlers
+    createSAXParser() {
         const parser = sax.parser(false, { lowercase: true, position: false });
         const path = [];
-        const len = xmlText.length;
-        let lastProgress = -1;
+        let tagCount = 0;
         
         const self = this;
         
-        // On tag open: push to path, run start handlers
-        // Note: SAX calls both onopentag and onclosetag for self-closing tags,
-        // just like Python's iterparse fires both 'start' and 'end' events.
-        // So we handle everything in the respective callbacks, not specially for self-closing.
         parser.onopentag = function(node) {
+            tagCount++;
             path.push(node);
             
             self.maybeStoreComponentPosition(path);
@@ -425,7 +424,6 @@ class X4SaveParser {
             self.maybeStoreResourceStart(path);
         };
         
-        // On tag close: run end handlers, pop from path
         parser.onclosetag = function(tagName) {
             if (path.length > 0) {
                 self.maybeStoreSuperHighwayStep(path);
@@ -437,91 +435,94 @@ class X4SaveParser {
         
         parser.onerror = function(err) {
             console.error('SAX parser error:', err);
-            // Continue parsing despite errors
             parser.resume();
         };
         
-        // Parse in smaller chunks for smoother progress reporting
-        const chunkSize = 256 * 1024; // 256KB chunks for more frequent updates
-        for (let i = 0; i < len; i += chunkSize) {
-            const chunk = xmlText.substring(i, Math.min(i + chunkSize, len));
-            parser.write(chunk);
-            
-            const progress = Math.floor(i / len * 100);
-            if (progress > lastProgress) {
-                lastProgress = progress;
-                onProgress(progress);
-            }
-        }
-        
-        parser.close();
+        return { parser, getTagCount: () => tagCount };
     }
 }
 
 // Worker message handler
 self.onmessage = async function(e) {
-    const { type, file, config } = e.data;
+    const { type, arrayBuffer, config } = e.data;
     
     if (type === 'parse') {
         try {
-            // Read and decompress file
-            self.postMessage({ type: 'progress', status: 'Reading...' });
+            self.postMessage({ type: 'progress', status: 'Processing...' });
             
-            let xmlText;
-            const arrayBuffer = await file.arrayBuffer();
-            const header = new Uint8Array(arrayBuffer.slice(0, 2));
-            const isGzipped = header[0] === 0x1f && header[1] === 0x8b;
-            
-            if (isGzipped) {
-                const ds = new DecompressionStream('gzip');
-                const blob = new Blob([arrayBuffer]);
-                const decompressedStream = blob.stream().pipeThrough(ds);
-                const reader = decompressedStream.getReader();
-                const chunks = [];
-                let totalSize = 0;
-                
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    chunks.push(value);
-                    totalSize += value.length;
-                    if (totalSize % (5 * 1024 * 1024) < value.length) {
-                        self.postMessage({ type: 'progress', status: `Reading ${Math.round(totalSize / 1024 / 1024)} MB` });
-                    }
-                }
-                
-                const result = new Uint8Array(totalSize);
-                let offset = 0;
-                for (const chunk of chunks) {
-                    result.set(chunk, offset);
-                    offset += chunk.length;
-                }
-                
-                xmlText = new TextDecoder().decode(result);
-            } else {
-                xmlText = new TextDecoder().decode(arrayBuffer);
-            }
-            
-            // Parse XML
-            self.postMessage({ type: 'progress', status: 'Parsing...' });
-            
-            const parser = new X4SaveParser(
+            // Create parser and SAX handler
+            const x4Parser = new X4SaveParser(
                 config.sectorNames,
                 config.shipNames,
                 config.positions,
                 config.strings
             );
+            const { parser: saxParser, getTagCount } = x4Parser.createSAXParser();
             
-            parser.parseXML(xmlText, (progress) => {
-                self.postMessage({ type: 'progress', status: `Parsing... ${progress}%` });
-            });
+            // Check if gzipped
+            const header = new Uint8Array(arrayBuffer.slice(0, 2));
+            const isGzipped = header[0] === 0x1f && header[1] === 0x8b;
+            
+            // Create text stream from input
+            const blob = new Blob([arrayBuffer]);
+            let textStream;
+            
+            if (isGzipped) {
+                // Streaming decompression + text decoding
+                const ds = new DecompressionStream('gzip');
+                const decompressedStream = blob.stream().pipeThrough(ds);
+                textStream = decompressedStream.pipeThrough(new TextDecoderStream());
+            } else {
+                // Just text decoding for non-gzipped
+                textStream = blob.stream().pipeThrough(new TextDecoderStream());
+            }
+            
+            // Stream through SAX parser - no need to hold entire XML in memory
+            const reader = textStream.getReader();
+            let bytesProcessed = 0;
+            let lastReportedMB = -1;
+            let firstChunk = true;
+            
+            while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                
+                // Validate first chunk looks like XML
+                if (firstChunk) {
+                    firstChunk = false;
+                    if (!value.trimStart().startsWith('<')) {
+                        throw new Error('Data does not appear to be XML');
+                    }
+                }
+                
+                // Feed chunk directly to SAX parser
+                saxParser.write(value);
+                
+                // Show MB processed (more accurate than estimated percentage)
+                bytesProcessed += value.length;
+                const currentMB = Math.floor(bytesProcessed / (1024 * 1024));
+                if (currentMB > lastReportedMB) {
+                    lastReportedMB = currentMB;
+                    self.postMessage({ type: 'progress', status: `Processing... ${currentMB} MB` });
+                }
+            }
+            
+            saxParser.close();
+            
+            // Validate results
+            const tagCount = getTagCount();
+            const sectorCount = Object.keys(x4Parser.data.sectors).length;
+            
+            if (tagCount === 0) {
+                throw new Error('No XML tags found in file');
+            }
             
             // Post-processing
             self.postMessage({ type: 'progress', status: 'Finishing...' });
-            parser.writeGateTargetSectors();
+            x4Parser.writeGateTargetSectors();
             
             // Send result
-            self.postMessage({ type: 'complete', data: parser.data });
+            self.postMessage({ type: 'complete', data: x4Parser.data });
             
         } catch (error) {
             self.postMessage({ type: 'error', message: error.message });

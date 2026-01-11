@@ -84,8 +84,12 @@ async function handleFileUpload(file) {
             worker.terminate();
         };
         
-        // Start parsing
-        worker.postMessage({ type: 'parse', file, config });
+        // Read file as ArrayBuffer on main thread (File objects don't transfer reliably to workers in all browsers)
+        statusEl.textContent = 'Reading file...';
+        const arrayBuffer = await file.arrayBuffer();
+        
+        // Start parsing - transfer the ArrayBuffer for efficiency
+        worker.postMessage({ type: 'parse', arrayBuffer, config }, [arrayBuffer]);
         
     } catch (error) {
         console.error('Error parsing save file:', error);
