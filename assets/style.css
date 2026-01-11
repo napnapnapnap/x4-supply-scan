@@ -151,6 +151,29 @@ a.sector.active {
     height: 100%;
     overflow-y: scroll;
     width: 20%;
+    
+    /* Firefox scrollbar styling */
+    scrollbar-width: thin;
+    scrollbar-color: #555 #2a2a2a;
+}
+
+/* Chromium/WebKit scrollbar styling */
+#sidebar::-webkit-scrollbar {
+    width: 8px;
+}
+
+#sidebar::-webkit-scrollbar-track {
+    background: #2a2a2a;
+    border-radius: 4px;
+}
+
+#sidebar::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+#sidebar::-webkit-scrollbar-thumb:hover {
+    background: #666;
 }
 
 #plot {
