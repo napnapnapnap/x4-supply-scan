@@ -1,36 +1,34 @@
 # X4 Vault Finder
 
-A browser-based visualisation tool for X4 save files. Upload your save file and explore a 3D plot of every sector.
+Visualize your X4 save file in 3D. Find vaults, abandoned ships, and stations across all sectors.
 
 **[Open X4 Vault Finder](https://fabian-flechtmann.github.io/x4-vault-finder)**
 
-It uses colors for different objects:
+<img width="1338" height="831" alt="Screenshot" src="https://github.com/user-attachments/assets/a649a461-bec4-4771-902d-7196f07656fe" />
 
-* Vaults
-   * Blue for collectable blueprints (This shows the Erlking vaults)
-   * Purple for collectable wares
-   * Pink for signal leaks
-   * Brown for empty
-* Stations
-   * Red for Khaak
-   * Green for Player
-   * Silver for all others
-* Yellow for abandoned ships
-* A silver ring for gates (clickable to navigate there)
+## Color Legend
 
-<img width="1338" height="831" alt="Screenshot_20260110_102427" src="https://github.com/user-attachments/assets/a649a461-bec4-4771-902d-7196f07656fe" />
+| Object | Color |
+|--------|-------|
+| Vault (blueprints) | Blue |
+| Vault (wares) | Purple |
+| Vault (signal leak) | Pink |
+| Vault (empty) | Brown |
+| Station (Khaak) | Red |
+| Station (Player) | Green |
+| Station (other) | Silver |
+| Abandoned ship | Yellow |
+| Gate | Silver ring (click to jump) |
 
-## How to use
+## Usage
 
-1. Open the application hosted on Github Pages or run a local webserver
-2. Click "Select Save" and select your save file
-3. Wait for the file to be parsed
-4. Click a sector on the left to show its 3D plot
+1. Open the app and click "Select Save"
+2. Pick your save file (.gz or .xml)
+3. Select a sector to view its 3D plot
 
-## Technical details
+## Notes
 
-* The save file is not modified
-* Everything runs in your browser - the save file is never uploaded to any server
-* Works with gzipped (.gz) or uncompressed (.xml) save files
-* When a new DLC is released, the x4-data-extractor.py script needs to be run again. The current DLC is Envoy.
-* Thanks to the [X4-Info-Miner](https://github.com/TuxInvader/X4-Info-Miner) project for developing the inspirational x4-cat-miner.py script
+- Runs entirely in your browser. Your save file stays local.
+- Save files are not modified.
+- After a new DLC release, run `x4-data-extractor.py` to update game data. Current: Envoy.
+- Inspired by [X4-Info-Miner](https://github.com/TuxInvader/X4-Info-Miner).
