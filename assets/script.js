@@ -396,34 +396,6 @@ function show(sector_id) {
         0
     );
 }
-window.addEventListener("load", function () {
-    let sidebar = document.getElementById("sidebar")
-    sector_names = Object.keys(window.data["sectors"])
-    .map(function(k) {
-        return {
-            "name": window.data["sectors"][k]["name"],
-            "id": k
-        }
-    })
-    sector_names.sort((a, b) => a["name"] == b["name"] ? 0 : (a["name"] < b["name"] ? -1 : 1))
-    for (let i = 0; i < sector_names.length; i++) {
-        let sector_id = sector_names[i]["id"]
-        let sector_name = sector_names[i]["name"]
-        let sector_data = window.data["sectors"][sector_id]
-        let html = `
-        <a class="sector" id="${sector_id}" onclick="show('${sector_id}')">
-        ${sector_name}
-        ${maybe_loot_tag(sector_data)}
-        ${maybe_ship_tag(sector_data)}
-        ${maybe_khaak_tag(sector_data)}
-        ${maybe_headquarter_tag(sector_data)}
-        ${maybe_unexplored_tag(sector_data)}
-        </a>
-        `
-        sidebar.insertAdjacentHTML("beforeend", html)
-
-    }
-});
 window.addEventListener("resize", () => {
     Plotly.Plots.resize("plot");
 });

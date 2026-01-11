@@ -17,7 +17,7 @@
                     <label for="file-upload" class="upload-button">
                         Select Save
                     </label>
-                    <input type="file" id="file-upload" accept=".gz,.xml" onchange="handleFileSelect(event)">
+                    <input type="file" id="file-upload" accept=".gz,.xml" onchange="if(this.files[0]) handleFileUpload(this.files[0])">
                     <div id="upload-progress">
                         <span id="upload-status">Ready</span>
                     </div>
@@ -30,14 +30,6 @@
                 <p class="save-path"><b>Linux:</b> ~/.config/EgoSoft/X4/&lt;user-id&gt;/save/</p>
             </div>
         </div>
-        <script>
-            function handleFileSelect(event) {
-                const file = event.target.files[0];
-                if (file) {
-                    handleFileUpload(file);
-                }
-            }
-        </script>
     </body>
 </html>
 

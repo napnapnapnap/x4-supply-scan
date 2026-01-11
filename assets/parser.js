@@ -3,10 +3,11 @@
 // Initialize empty data structure
 window.data = { sectors: {} };
 
+// Base path for loading assets
+const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '.';
+
 // Load configuration files
 async function loadConfig() {
-    const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '.';
-    
     const fetchJson = async (url) => {
         const response = await fetch(url);
         if (!response.ok) {
@@ -38,7 +39,6 @@ async function handleFileUpload(file) {
         const config = await loadConfig();
         
         // Create worker
-        const basePath = window.location.pathname.replace(/\/[^\/]*$/, '') || '.';
         const worker = new Worker(`${basePath}/assets/parser-worker.js`);
         
         // Handle worker messages
