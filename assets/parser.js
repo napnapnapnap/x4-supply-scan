@@ -34,7 +34,7 @@ async function handleFileUpload(file) {
     
     try {
         progressEl.style.display = 'block';
-        statusEl.textContent = 'Loading configuration...';
+        statusEl.textContent = 'Starting ...';
         
         const config = await loadConfig();
         
@@ -85,7 +85,6 @@ async function handleFileUpload(file) {
         };
         
         // Read file as ArrayBuffer on main thread (File objects don't transfer reliably to workers in all browsers)
-        statusEl.textContent = 'Reading file...';
         const arrayBuffer = await file.arrayBuffer();
         
         // Start parsing - transfer the ArrayBuffer for efficiency

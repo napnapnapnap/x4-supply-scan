@@ -448,7 +448,6 @@ self.onmessage = async function(e) {
     
     if (type === 'parse') {
         try {
-            self.postMessage({ type: 'progress', status: 'Processing...' });
             
             // Create parser and SAX handler
             const x4Parser = new X4SaveParser(
@@ -503,7 +502,7 @@ self.onmessage = async function(e) {
                 const currentMB = Math.floor(bytesProcessed / (1024 * 1024));
                 if (currentMB > lastReportedMB) {
                     lastReportedMB = currentMB;
-                    self.postMessage({ type: 'progress', status: `Processing... ${currentMB} MB` });
+                    self.postMessage({ type: 'progress', status: `Processing ... ${currentMB} MB` });
                 }
             }
             
@@ -518,7 +517,7 @@ self.onmessage = async function(e) {
             }
             
             // Post-processing
-            self.postMessage({ type: 'progress', status: 'Finishing...' });
+            self.postMessage({ type: 'progress', status: 'Finishing ...' });
             x4Parser.writeGateTargetSectors();
             
             // Send result
