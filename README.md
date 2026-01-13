@@ -6,20 +6,6 @@ Visualize your X4 save file in 3D. Find vaults, abandoned ships, and stations ac
 
 <img width="1338" height="831" alt="Screenshot" src="https://github.com/user-attachments/assets/a649a461-bec4-4771-902d-7196f07656fe" />
 
-## Color Legend
-
-| Object | Color |
-|--------|-------|
-| Vault (blueprints) | Blue |
-| Vault (wares) | Purple |
-| Vault (signal leak) | Pink |
-| Vault (empty) | Brown |
-| Station (Khaak) | Red |
-| Station (Player) | Green |
-| Station (other) | Silver |
-| Abandoned ship | Yellow |
-| Gate | Silver ring (click to jump) |
-
 ## Usage
 
 1. Open the app and click "Select Save"
@@ -28,7 +14,7 @@ Visualize your X4 save file in 3D. Find vaults, abandoned ships, and stations ac
 
 ## Notes
 
-- Runs entirely in your browser. Your save file stays local.
 - Save files are not modified.
-- After a new DLC release, run `x4-data-extractor.py` to update game data. Current: Envoy.
+- Runs entirely in the browser. Save files stays local.
+- After a new DLC release, run `x4-data-extractor.py` to update game data. Current DLC: Envoy.
 - Inspired by [X4-Info-Miner](https://github.com/TuxInvader/X4-Info-Miner).
