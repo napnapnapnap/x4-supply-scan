@@ -44,6 +44,15 @@
         }
     });
     
+    // Track sector view (called from script.js)
+    window.trackSectorView = function(sectorName) {
+        track({
+            e_c: 'Sector',
+            e_a: 'Sector Opened',
+            e_n: sectorName
+        });
+    };
+    
     // Track save file processing stats (called from parser.js)
     window.trackSaveFileStats = function(success, processingTimeMs, fileSizeBytes, stats) {
         var fileSizeMB = Math.round(fileSizeBytes / (1024 * 1024));

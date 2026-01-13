@@ -303,6 +303,12 @@ function show(sector_id) {
     }
     lastShowAt = performance.now()
 
+    // Track sector view
+    let sectorName = window.data.sectors[sector_id]?.name || sector_id;
+    if (typeof trackSectorView === 'function') {
+        trackSectorView(sectorName);
+    }
+
     for (let e of document.getElementsByClassName("sector")) {
         e.classList.remove("active")
     }
