@@ -32,6 +32,9 @@ async function handleFileUpload(file) {
     const statusEl = document.getElementById('upload-status');
     statusEl.style.color = '#aaa';
     
+    const startTime = performance.now();
+    const fileSize = file.size;
+    
     try {
         progressEl.style.display = 'block';
         statusEl.textContent = 'Starting ...';
@@ -43,18 +46,28 @@ async function handleFileUpload(file) {
         
         // Handle worker messages
         worker.onmessage = function(e) {
-            const { type, status, data, message } = e.data;
+            const { type, status, data, stats, message } = e.data;
             
             if (type === 'progress') {
                 statusEl.textContent = status;
             } else if (type === 'complete') {
+                const processingTime = Math.round(performance.now() - startTime);
                 const sectorCount = Object.keys(data.sectors).length;
                 
                 if (sectorCount === 0) {
                     statusEl.textContent = 'Warning: No sectors found in save file';
                     statusEl.style.color = 'orange';
+                    // Track failed parsing (no sectors)
+                    if (typeof trackSaveFileStats === 'function') {
+                        trackSaveFileStats(false, processingTime, fileSize, null);
+                    }
                     worker.terminate();
                     return;
+                }
+                
+                // Track successful parsing
+                if (typeof trackSaveFileStats === 'function') {
+                    trackSaveFileStats(true, processingTime, fileSize, stats);
                 }
                 
                 // Update global data and refresh UI
@@ -70,17 +83,27 @@ async function handleFileUpload(file) {
                 progressEl.style.display = 'none';
                 worker.terminate();
             } else if (type === 'error') {
+                const processingTime = Math.round(performance.now() - startTime);
                 console.error('Worker error:', message);
                 statusEl.textContent = 'Error: ' + message;
                 statusEl.style.color = 'crimson';
+                // Track failed parsing
+                if (typeof trackSaveFileStats === 'function') {
+                    trackSaveFileStats(false, processingTime, fileSize, null);
+                }
                 worker.terminate();
             }
         };
         
         worker.onerror = function(error) {
+            const processingTime = Math.round(performance.now() - startTime);
             console.error('Worker error:', error);
             statusEl.textContent = 'Error: ' + error.message;
             statusEl.style.color = 'crimson';
+            // Track failed parsing
+            if (typeof trackSaveFileStats === 'function') {
+                trackSaveFileStats(false, processingTime, fileSize, null);
+            }
             worker.terminate();
         };
         
@@ -91,9 +114,14 @@ async function handleFileUpload(file) {
         worker.postMessage({ type: 'parse', arrayBuffer, config }, [arrayBuffer]);
         
     } catch (error) {
+        const processingTime = Math.round(performance.now() - startTime);
         console.error('Error parsing save file:', error);
         statusEl.textContent = 'Error: ' + error.message;
         statusEl.style.color = 'crimson';
+        // Track failed parsing
+        if (typeof trackSaveFileStats === 'function') {
+            trackSaveFileStats(false, processingTime, fileSize, null);
+        }
     }
 }
 

@@ -442,6 +442,36 @@ class X4SaveParser {
     }
 }
 
+// Collect statistics from parsed data
+function collectStats(data) {
+    const stats = {
+        vaults: { empty: 0, with_blueprints: 0, with_wares: 0, with_signalleaks: 0 },
+        stations_by_faction: {}
+    };
+    
+    for (const sector of Object.values(data.sectors)) {
+        for (const obj of Object.values(sector.objects)) {
+            // Count vaults
+            if (obj.class === 'datavault' || (obj.macro && obj.macro.includes('erlking_vault'))) {
+                if (obj.has_blueprints) stats.vaults.with_blueprints++;
+                if (obj.has_wares) stats.vaults.with_wares++;
+                if (obj.has_signalleak) stats.vaults.with_signalleaks++;
+                if (!obj.has_blueprints && !obj.has_wares && !obj.has_signalleak) {
+                    stats.vaults.empty++;
+                }
+            }
+            
+            // Count stations by faction
+            if (obj.class === 'station' && !obj.is_wreck) {
+                const faction = obj.owner || 'unknown';
+                stats.stations_by_faction[faction] = (stats.stations_by_faction[faction] || 0) + 1;
+            }
+        }
+    }
+    
+    return stats;
+}
+
 // Worker message handler
 self.onmessage = async function(e) {
     const { type, arrayBuffer, config } = e.data;
@@ -520,8 +550,11 @@ self.onmessage = async function(e) {
             self.postMessage({ type: 'progress', status: 'Finishing ...' });
             x4Parser.writeGateTargetSectors();
             
+            // Collect statistics
+            const stats = collectStats(x4Parser.data);
+            
             // Send result
-            self.postMessage({ type: 'complete', data: x4Parser.data });
+            self.postMessage({ type: 'complete', data: x4Parser.data, stats });
             
         } catch (error) {
             self.postMessage({ type: 'error', message: error.message });
