@@ -54,10 +54,10 @@
         }
     });
     
-    window.trackSectorView = function(sectorName) {
+    window.trackSectorView = function(sectorName, source) {
         track({
             e_c: 'Sector',
-            e_a: 'Sector Opened',
+            e_a: source === 'gate' ? 'Opened via Gate' : 'Opened via Sidebar',
             e_n: sectorName
         });
     };

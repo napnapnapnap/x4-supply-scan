@@ -296,17 +296,15 @@ function get_resource_points(resource_areas, color, resource_name) {
     }
 }
 var lastShowAt = null;
-function show(sector_id) {
+function show(sector_id, source) {
     if (lastShowAt !== null && performance.now() - lastShowAt < 200) {
-        // Plotly fires clicks more than once sometimes
         return
     }
     lastShowAt = performance.now()
 
-    // Track sector view
     let sectorName = window.data.sectors[sector_id]?.name || sector_id;
     if (typeof trackSectorView === 'function') {
-        trackSectorView(sectorName);
+        trackSectorView(sectorName, source || 'sidebar');
     }
 
     for (let e of document.getElementsByClassName("sector")) {
@@ -396,7 +394,7 @@ function show(sector_id) {
                 if (macro === undefined) {
                     return
                 }
-                show(macro)
+                show(macro, 'gate')
             });
         },
         0
