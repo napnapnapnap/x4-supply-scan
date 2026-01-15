@@ -2,13 +2,6 @@
     var siteId = '1';
     var trackerUrl = 'https://metrics.flechtmann.net/m.php';
     
-    var visitorId = localStorage.getItem('_vid');
-    if (!visitorId) {
-        visitorId = Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
-        visitorId = visitorId.substring(0, 16);
-        localStorage.setItem('_vid', visitorId);
-    }
-    
     var factionDimensions = {
         'antigone': 8, 'argon': 9, 'buccaneers': 10, 'fallenfamilies': 11,
         'freefamilies': 12, 'godrealm': 13, 'hatikvah': 14, 'holyorder': 15,
@@ -21,7 +14,6 @@
         return {
             idsite: siteId,
             rec: 1,
-            _id: visitorId,
             url: window.location.href,
             urlref: document.referrer,
             res: window.screen.width + 'x' + window.screen.height,
