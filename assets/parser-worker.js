@@ -171,7 +171,7 @@ class X4SaveParser {
     isModule(path) {
         const last = path[path.length - 1];
         return last.name === 'component' && 
-            ['production', 'storage', 'dockarea', 'pier', 'defence', 'module', 'buildmodule'].includes(last.attributes.class || '');
+            ['production', 'storage', 'dockarea', 'pier', 'defence', 'module', 'buildmodule', 'habitation'].includes(last.attributes.class || '');
     }
 
     getAncestorStation(path) {
