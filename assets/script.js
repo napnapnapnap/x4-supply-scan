@@ -1,3 +1,8 @@
+var moduleMacros = {};
+fetch('assets/x4-modules-macros.json')
+    .then(response => response.json())
+    .then(json => moduleMacros = json);
+
 function getStyle(o) {
     if (o["class"] == "station" && o["owner"] == "khaak") {
         var title = "";
@@ -397,19 +402,91 @@ function show(sector_id, source) {
     setTimeout(
         () => {
             let plotDiv = document.getElementById("plot")
-            plotDiv.innerHTML = "";
+            
+            // cleanup previous listeners if they exist
+            if (plotDiv && typeof plotDiv.removeAllListeners === 'function') {
+                try {
+                    plotDiv.removeAllListeners('plotly_click');
+                    plotDiv.removeAllListeners('plotly_hover');
+                    plotDiv.removeAllListeners('plotly_unhover');
+                } catch (e) {
+                    // ignore errors during cleanup
+                }
+            }
+            
+            Plotly.purge(plotDiv);
             Plotly.newPlot("plot", points, layout)
+            
+            let lastClickTime = 0;
+            
             plotDiv.on("plotly_click", function(data) {
-                let pointNumber = data["points"][0]["pointNumber"]
-                let target_sector_macros = data["points"][0]["data"]["target_sector_macros"]
-                if (target_sector_macros === undefined) {
+                // Prevent multiple clicks/tabs
+                if (Date.now() - lastClickTime < 1000) return;
+                lastClickTime = Date.now();
+
+                let point = data["points"][0]
+                let pointNumber = point["pointNumber"]
+                let traceData = point["data"]
+                
+                // Handle gates
+                let target_sector_macros = traceData["target_sector_macros"]
+                if (target_sector_macros !== undefined) {
+                    let macro = target_sector_macros[pointNumber]
+                    if (macro !== undefined) {
+                        show(macro, 'gate')
+                    }
                     return
                 }
-                let macro = target_sector_macros[pointNumber]
-                if (macro === undefined) {
-                    return
+
+                // Handle player stations
+                if (traceData["name"] === "Stations") {
+                    let stationCode = point["text"]
+                    let station = window.data.sectors[sector_id].objects[stationCode]
+                    
+                    if (station && station["owner"] === "player" && station["modules"]) {
+                        let urlParts = []
+                        for (let [macro, count] of Object.entries(station["modules"])) {
+                            let moduleInfo = moduleMacros ? moduleMacros[macro] : null
+                            if (moduleInfo && moduleInfo.id) {
+                                urlParts.push(`$module-${moduleInfo.id},count:${count};`)
+                            }
+                        }
+                        
+                        if (urlParts.length > 0) {
+                            let url = `https://x4-game.com/#/station-calculator?l=@${urlParts.join(',')}`
+                            window.open(url, '_blank')
+                        }
+                    }
                 }
-                show(macro, 'gate')
+            });
+
+            plotDiv.on("plotly_hover", function(data) {
+                let point = data["points"][0]
+                let pointNumber = point["pointNumber"]
+                let traceData = point["data"]
+                let isClickable = false
+
+                // Check for gates
+                if (traceData["target_sector_macros"] !== undefined) {
+                    isClickable = true
+                }
+                
+                // Check for player stations
+                if (!isClickable && traceData["name"] === "Stations") {
+                    let stationCode = point["text"]
+                    let station = window.data.sectors[sector_id].objects[stationCode]
+                    if (station && station["owner"] === "player") {
+                        isClickable = true
+                    }
+                }
+
+                if (isClickable) {
+                    document.getElementById("plot").style.cursor = "pointer"
+                }
+            });
+
+            plotDiv.on("plotly_unhover", function(data) {
+                document.getElementById("plot").style.cursor = ""
             });
         },
         0
@@ -430,7 +507,11 @@ function appendModules(title, o) {
     if (o["modules"]) {
         let modules = [];
         for (let [macro, count] of Object.entries(o["modules"])) {
-            modules.push(count + "x " + formatMacroName(macro));
+            let name = formatMacroName(macro);
+            if (moduleMacros && moduleMacros[macro]) {
+                 name = moduleMacros[macro].name;
+            }
+            modules.push(count + "x " + name);
         }
         modules.sort();
         if (modules.length > 0) {
