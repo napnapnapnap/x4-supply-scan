@@ -402,14 +402,28 @@ function show(sector_id, source) {
     setTimeout(
         () => {
             let plotDiv = document.getElementById("plot")
-            if (plotDiv.removeAllListeners) {
-                plotDiv.removeAllListeners('plotly_click');
-                plotDiv.removeAllListeners('plotly_hover');
-                plotDiv.removeAllListeners('plotly_unhover');
+            
+            // cleanup previous listeners if they exist
+            if (plotDiv && typeof plotDiv.removeAllListeners === 'function') {
+                try {
+                    plotDiv.removeAllListeners('plotly_click');
+                    plotDiv.removeAllListeners('plotly_hover');
+                    plotDiv.removeAllListeners('plotly_unhover');
+                } catch (e) {
+                    // ignore errors during cleanup
+                }
             }
+            
             Plotly.purge(plotDiv);
             Plotly.newPlot("plot", points, layout)
+            
+            let lastClickTime = 0;
+            
             plotDiv.on("plotly_click", function(data) {
+                // Prevent multiple clicks/tabs
+                if (Date.now() - lastClickTime < 1000) return;
+                lastClickTime = Date.now();
+
                 let point = data["points"][0]
                 let pointNumber = point["pointNumber"]
                 let traceData = point["data"]
