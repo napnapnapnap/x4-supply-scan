@@ -67,14 +67,15 @@ async function loadConfig() {
         return response.json();
     };
     
-    const [sectorNames, shipNames, positions, strings] = await Promise.all([
+    const [sectorNames, shipNames, positions, strings, sectorSunlight] = await Promise.all([
         fetchJson(`${basePath}/assets/x4-sector-names.json`),
         fetchJson(`${basePath}/assets/x4-ship-names.json`),
         fetchJson(`${basePath}/assets/x4-positions.json`),
-        fetchJson(`${basePath}/assets/x4-strings.json`)
+        fetchJson(`${basePath}/assets/x4-strings.json`),
+        fetchJson(`${basePath}/assets/x4-sector-sunlight.json`)
     ]);
     
-    return { sectorNames, shipNames, positions, strings };
+    return { sectorNames, shipNames, positions, strings, sectorSunlight };
 }
 
 // Main upload handler

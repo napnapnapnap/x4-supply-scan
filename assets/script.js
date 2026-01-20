@@ -35,12 +35,15 @@ function getStyle(o) {
         ]
     }
     else if (o["class"] == "station") {
-        var title = capitalizeFirstLetter(o["owner"])
-        if (o["is_headquarter"]) {
-            title += " Headquarter"
-        }
-        else {
-            title += " Station"
+        var title = o["name"]
+        if (!title) {
+            title = capitalizeFirstLetter(o["owner"])
+            if (o["is_headquarter"]) {
+                title += " Headquarter"
+            }
+            else {
+                title += " Station"
+            }
         }
         if (o["is_wreck"]) {
             title += " (destroyed)"
@@ -54,14 +57,14 @@ function getStyle(o) {
         let activity = o["is_active"] ? "" : "(Inactive) "
         return [
             activity + "Gate to " + o["target_sector_name"],
-            "rgba(0, 0, 0, 0)"
+            "dodgerblue"
         ]
     }
     else if (o["class"] == "highwayentrygate" || o["class"] == "highwayexitgate") {
-        let direction = o["class"] == "highwayentrygate" ? "Entry to" : "Exit from"
+        let direction = o["class"] == "highwayentrygate" ? "Entry" : "Exit"
         return [
-            "Super Highway " + direction + " " + o["target_sector_name"],
-            "rgba(0, 0, 0, 0)"
+            "Super Highway " + direction,
+            "dodgerblue"
         ]
     }
     else if (o["class"].startsWith("ship")) {
@@ -224,9 +227,13 @@ function get_points(objects) {
             color: objects.map(s => getStyle(s)[1])
         },
         mode: "markers+text",
-        text: objects.map(s => s["code"]),
+        text: objects.map(s => getStyle(s)[0]),
         textfont: {
-            color: "#fafafa"
+            color: objects.map(s => {
+                if (s["class"] === "station" && s["owner"] === "player") return "green"
+                if (["gate", "highwayentrygate", "highwayexitgate"].includes(s["class"])) return "dodgerblue"
+                return "#fafafa"
+            })
         },
         type: "scatter3d"
     }
@@ -237,7 +244,7 @@ function get_station_points(objects) {
     return points
 }
 function get_gate_points(objects) {
-    let gate_objects = objects.filter(o => ["gate", "highwayentrygate", "highwayexitgate"].includes(o["class"]))
+    let gate_objects = objects.filter(o => o["class"] === "gate")
     let target_sector_macros = gate_objects.map(o => o["target_sector_macro"])
     let points = get_points(gate_objects)
     points.name = "Gates"
@@ -259,6 +266,49 @@ function get_vault_points(objects) {
     points.name = "Vaults"
     return points
 }
+function get_highway_lines(objects, sector_id) {
+    let x = []
+    let y = []
+    let z = []
+    
+    // Create a map for fast lookup
+    let objectsMap = {}
+    for (let o of objects) {
+        objectsMap[o.code] = o
+    }
+
+    for (let o of objects) {
+        if (!["highwayentrygate", "highwayexitgate"].includes(o["class"])) continue;
+        
+        // Ensure we only draw local highways (same sector)
+        if (o.target_sector_id !== sector_id) continue;
+        if (!o.target_code) continue;
+        
+        // Deduplicate: only draw if current code is lexicographically smaller than target code
+        if (o.code >= o.target_code) continue;
+        
+        let target = objectsMap[o.target_code];
+        if (!target) continue;
+
+        x.push(o.x, target.x, null)
+        y.push(o.y, target.y, null)
+        z.push(o.z, target.z, null)
+    }
+
+    return {
+        x: x,
+        y: y,
+        z: z,
+        mode: "lines",
+        name: "Highways",
+        line: {
+            color: "dodgerblue",
+            width: 5
+        },
+        type: "scatter3d",
+        hoverinfo: "none"
+    }
+}
 function get_title_point(objects, sector_id) {
     let all_x = Object.values(objects).map(o => o.x)
     let all_y = Object.values(objects).map(o => o.y)
@@ -267,6 +317,13 @@ function get_title_point(objects, sector_id) {
     let max_x = Math.max(...all_x)
     let max_y = Math.max(...all_y)
     let max_z = Math.max(...all_z)
+
+    let sector = window.data.sectors[sector_id]
+    let sunlightText = ""
+    if (sector.sunlight !== undefined) {
+        sunlightText = ` (${Math.round(sector.sunlight * 100)}% Sunlight)`
+    }
+
     return {
         x: [(min_x + max_x) / 2.0],
         y: [max_y],
@@ -274,7 +331,7 @@ function get_title_point(objects, sector_id) {
         hovertemplate: "<extra></extra>",
         mode: "text",
         name: "Title",
-        text: [window.data.sectors[sector_id].name],
+        text: [sector.name + sunlightText],
         textfont: {
             size: 20,
             color: "#fafafa"
@@ -338,6 +395,7 @@ function show(sector_id, source) {
     let points = [
         get_station_points(objects),
         get_gate_points(objects),
+        get_highway_lines(objects, sector_id),
         get_ship_points(objects),
         get_vault_points(objects),
         get_resource_points(resource_areas, "rgb(255, 238, 193)", "helium"),
