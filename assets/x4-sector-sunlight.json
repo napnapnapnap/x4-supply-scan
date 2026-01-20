@@ -8,6 +8,10 @@
    "sunlight": 126
  },
  {
+   "sector": "Argon Prime",
+   "sunlight": 100
+ },
+ {
    "sector": "Asteroid Belt",
    "sunlight": 13
  },
@@ -28,6 +32,10 @@
    "sunlight": 1390
  },
  {
+   "sector": "Avarice IV",
+   "sunlight": 1390
+ },
+ {
    "sector": "Avarice V Dead End",
    "sunlight": 1390
  },
@@ -42,6 +50,14 @@
  {
    "sector": "Black Hole Sun V",
    "sunlight": 119
+ },
+ {
+   "sector": "Brennan's Triumph",
+   "sunlight": 122
+ },
+ {
+   "sector": "Bright Promise",
+   "sunlight": 204
  },
  {
    "sector": "CEO's Doubt",
@@ -60,8 +76,24 @@
    "sunlight": 142
  },
  {
+   "sector": "Company Regard",
+   "sunlight": 83
+ },
+ {
+   "sector": "Earth",
+   "sunlight": 100
+ },
+ {
    "sector": "Eighteen Billion",
    "sunlight": 90
+ },
+ {
+   "sector": "Eleventh Hour",
+   "sunlight": 118
+ },
+ {
+   "sector": "Emperor's Pride IV",
+   "sunlight": 71
  },
  {
    "sector": "Emperor's Pride VI",
@@ -74,6 +106,10 @@
  {
    "sector": "Family Nhuut",
    "sunlight": 85
+ },
+ {
+   "sector": "Family Tkr",
+   "sunlight": 89
  },
  {
    "sector": "Family Zhin",
@@ -90,6 +126,10 @@
  {
    "sector": "Fires of Defeat",
    "sunlight": 81
+ },
+ {
+   "sector": "Freedom's Reach",
+   "sunlight": 221
  },
  {
    "sector": "Frontier Edge",
@@ -120,8 +160,16 @@
    "sunlight": 128
  },
  {
+   "sector": "Guiding Star V",
+   "sunlight": 83
+ },
+ {
    "sector": "Guiding Star VII",
    "sunlight": 71
+ },
+ {
+   "sector": "Hatikvah's Choice I",
+   "sunlight": 112
  },
  {
    "sector": "Hatikvah's Choice III",
@@ -152,6 +200,14 @@
    "sunlight": 102
  },
  {
+   "sector": "Hewa's Twin III",
+   "sunlight": 86
+ },
+ {
+   "sector": "Hewa's Twin IV The Cove",
+   "sunlight": 91
+ },
+ {
    "sector": "Hewa's Twin V",
    "sunlight": 82
  },
@@ -168,12 +224,32 @@
    "sunlight": 115
  },
  {
+   "sector": "Jupiter",
+   "sunlight": 10
+ },
+ {
+   "sector": "Kingdom End I",
+   "sunlight": 118
+ },
+ {
    "sector": "Lasting Vengeance",
    "sunlight": 100
  },
  {
+   "sector": "Litany of Fury IX",
+   "sunlight": 42
+ },
+ {
+   "sector": "Litany of Fury XII",
+   "sunlight": 32
+ },
+ {
    "sector": "Loomanckstrat's Legacy",
    "sunlight": 2
+ },
+ {
+   "sector": "Mars",
+   "sunlight": 44
  },
  {
    "sector": "Matrix #101",
@@ -200,6 +276,10 @@
    "sunlight": 115
  },
  {
+   "sector": "Memory of Profit X",
+   "sunlight": 106
+ },
+ {
    "sector": "Menelaus' Oasis",
    "sunlight": 271
  },
@@ -220,12 +300,20 @@
    "sunlight": 111
  },
  {
+   "sector": "Mitsuno's Revelation",
+   "sunlight": 118
+ },
+ {
    "sector": "Mitsuno's Sacrifice",
    "sunlight": 106
  },
  {
    "sector": "Moo-Kye's Revenge",
    "sunlight": 93
+ },
+ {
+   "sector": "Morning Star III",
+   "sunlight": 76
  },
  {
    "sector": "Morning Star IV",
@@ -240,6 +328,10 @@
    "sunlight": 82
  },
  {
+   "sector": "Nopileos' Fortune VI",
+   "sunlight": 78
+ },
+ {
    "sector": "Nopileos' Memorial",
    "sunlight": 163
  },
@@ -252,12 +344,20 @@
    "sunlight": 2
  },
  {
+   "sector": "Open Market",
+   "sunlight": 88
+ },
+ {
    "sector": "Ore Belt",
    "sunlight": 134
  },
  {
    "sector": "Path to Profit",
    "sunlight": 143
+ },
+ {
+   "sector": "Pious Mists II",
+   "sunlight": 136
  },
  {
    "sector": "Pious Mists IV",
@@ -268,12 +368,20 @@
    "sunlight": 118
  },
  {
+   "sector": "Pluto",
+   "sunlight": 5
+ },
+ {
    "sector": "Pontifex's Claim",
    "sunlight": 194
  },
  {
    "sector": "President's End",
    "sunlight": 71
+ },
+ {
+   "sector": "Profit Center Alpha",
+   "sunlight": 79
  },
  {
    "sector": "Reflected Stars",
@@ -288,12 +396,20 @@
    "sunlight": 15
  },
  {
+   "sector": "Sacred Relic",
+   "sunlight": 71
+ },
+ {
    "sector": "Sanctuary of Darkness",
    "sunlight": 174
  },
  {
    "sector": "Sanctum Verge",
    "sunlight": 89
+ },
+ {
+   "sector": "Saturn 1",
+   "sunlight": 8
  },
  {
    "sector": "Saturn 2",
@@ -372,6 +488,14 @@
    "sunlight": 117
  },
  {
+   "sector": "Tharka's Ravine XXIV",
+   "sunlight": 109
+ },
+ {
+   "sector": "The Moon",
+   "sunlight": 105
+ },
+ {
    "sector": "The Reach",
    "sunlight": 367
  },
@@ -384,8 +508,20 @@
    "sunlight": 100
  },
  {
+   "sector": "Thuruk's Demise II First Impact",
+   "sunlight": 71
+ },
+ {
+   "sector": "Thuruk's Demise III",
+   "sunlight": 59
+ },
+ {
    "sector": "Titan",
    "sunlight": 8
+ },
+ {
+   "sector": "Towering Wave",
+   "sunlight": 118
  },
  {
    "sector": "Trinity Sanctum III",
@@ -394,6 +530,10 @@
  {
    "sector": "Trinity Sanctum VII",
    "sunlight": 106
+ },
+ {
+   "sector": "True Sight",
+   "sunlight": 71
  },
  {
    "sector": "Turquoise Sea IX",
@@ -408,8 +548,20 @@
    "sunlight": 133
  },
  {
+   "sector": "Unholy Retribution",
+   "sunlight": 163
+ },
+ {
    "sector": "Unknown System",
    "sunlight": 5
+ },
+ {
+   "sector": "Uranus",
+   "sunlight": 7
+ },
+ {
+   "sector": "Venus",
+   "sunlight": 189
  },
  {
    "sector": "Void of Opportunity",
@@ -432,7 +584,27 @@
    "sunlight": 11
  },
  {
+   "sector": "Wretched Skies IV Family Valka",
+   "sunlight": 130
+ },
+ {
+   "sector": "Wretched Skies V Family Phi",
+   "sunlight": 123
+ },
+ {
    "sector": "Wretched Skies X",
    "sunlight": 108
+ },
+ {
+   "sector": "Zyarth's Dominion I",
+   "sunlight": 142
+ },
+ {
+   "sector": "Zyarth's Dominion IV",
+   "sunlight": 210
+ },
+ {
+   "sector": "Zyarth's Dominion X",
+   "sunlight": 151
  }
 ]

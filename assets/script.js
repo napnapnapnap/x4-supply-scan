@@ -220,6 +220,7 @@ function get_points(objects) {
         x: objects.map(s => s["x"]),
         y: objects.map(s => s["y"]),
         z: objects.map(s => s["z"]),
+        customdata: objects.map(s => s["code"]),
         hoverinfo: "text",
         hovertext: objects.map(s => {
             let style = getStyle(s)
@@ -502,7 +503,7 @@ function show(sector_id, source) {
 
                 // Handle player stations
                 if (traceData["name"] === "Stations") {
-                    let stationCode = point["text"]
+                    let stationCode = point["customdata"]
                     let station = window.data.sectors[sector_id].objects[stationCode]
                     
                     if (station && station["owner"] === "player" && station["modules"]) {
@@ -535,7 +536,7 @@ function show(sector_id, source) {
                 
                 // Check for player stations
                 if (!isClickable && traceData["name"] === "Stations") {
-                    let stationCode = point["text"]
+                    let stationCode = point["customdata"]
                     let station = window.data.sectors[sector_id].objects[stationCode]
                     if (station && station["owner"] === "player") {
                         isClickable = true
