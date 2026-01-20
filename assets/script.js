@@ -28,10 +28,11 @@ function getStyle(o) {
         if (o["is_wreck"]) {
             title += " (destroyed)"
         }
-        title = appendModules(title, o)
+        var longTitle = appendModules(title, o)
         return [
             title,
-            "green"
+            "green",
+            longTitle
         ]
     }
     else if (o["class"] == "station") {
@@ -220,7 +221,10 @@ function get_points(objects) {
         y: objects.map(s => s["y"]),
         z: objects.map(s => s["z"]),
         hoverinfo: "text",
-        hovertext: objects.map(s => getStyle(s)[0]),
+        hovertext: objects.map(s => {
+            let style = getStyle(s)
+            return style[2] || style[0]
+        }),
         name: "Unnamed",
         marker: {
             size: 5,
