@@ -1,8 +1,8 @@
-# X4 Vault Finder
+# X4 Supply Scan
 
 Visualize your X4 save file in 3D. Find vaults, abandoned ships, and stations across all sectors.
 
-**[Open X4 Vault Finder](https://fabian-flechtmann.github.io/x4-vault-finder)**
+**[Open X4 Supply Scan](https://napnapnapnap.github.io/x4-supply-scan)**
 
 <img width="1338" height="831" alt="Screenshot" src="https://github.com/user-attachments/assets/a649a461-bec4-4771-902d-7196f07656fe" />
 
