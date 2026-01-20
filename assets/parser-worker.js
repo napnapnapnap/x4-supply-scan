@@ -7,11 +7,20 @@ const workerPath = self.location.href.substring(0, self.location.href.lastIndexO
 importScripts(workerPath + 'sax.js');
 
 class X4SaveParser {
-    constructor(sectorNames, shipNames, positions, strings) {
+    constructor(sectorNames, shipNames, positions, strings, sectorSunlight) {
         this.sectorNames = sectorNames;
         this.shipNames = shipNames;
         this.positions = positions;
         this.strings = strings;
+        
+        // Build sunlight map (Sector Name -> Multiplier)
+        this.sectorSunlightMap = {};
+        if (sectorSunlight && Array.isArray(sectorSunlight)) {
+            for (const entry of sectorSunlight) {
+                // Convert percentage (100) to multiplier (1.0)
+                this.sectorSunlightMap[entry.sector] = entry.sunlight / 100.0;
+            }
+        }
         
         this.componentPositions = {};
         this.currentSector = null;
@@ -111,8 +120,7 @@ class X4SaveParser {
         const last = path[path.length - 1];
         return (
             last.name === 'component' &&
-            ['highwayentrygate', 'highwayexitgate'].includes(last.attributes.class || '') &&
-            (last.attributes.macro || '').includes('superhighway')
+            ['highwayentrygate', 'highwayexitgate'].includes(last.attributes.class || '')
         );
     }
 
@@ -152,12 +160,12 @@ class X4SaveParser {
 
     isSuperHighwayStepEntry(path) {
         const last = path[path.length - 1];
-        return last.name === 'connection' && last.attributes.connection === 'entrygate';
+        return last.name === 'connection' && (last.attributes.connection || '').includes('entrygate');
     }
 
     isSuperHighwayStepExit(path) {
         const last = path[path.length - 1];
-        return last.name === 'connection' && last.attributes.connection === 'exitgate';
+        return last.name === 'connection' && (last.attributes.connection || '').includes('exitgate');
     }
 
     isGateActivity(path) {
@@ -185,9 +193,18 @@ class X4SaveParser {
         
         if (this.isSector(path)) {
             this.currentSector = attrib.macro;
+            const sectorName = this.getSectorName(this.currentSector);
+            let sunlight = parseFloat(attrib.sunlight || '1');
+            
+            // Override with static data if available
+            if (this.sectorSunlightMap[sectorName] !== undefined) {
+                sunlight = this.sectorSunlightMap[sectorName];
+            }
+
             this.data.sectors[this.currentSector] = {
-                name: this.getSectorName(this.currentSector),
+                name: sectorName,
                 is_known: attrib.known === '1' || attrib.knownto === 'player',
+                sunlight: sunlight,
                 objects: {},
                 resource_areas: []
             };
@@ -219,6 +236,7 @@ class X4SaveParser {
                 class: attrib.class || '',
                 code: code,
                 macro: macro,
+                name: attrib.name || '',
                 owner: attrib.owner || ''
             };
             
@@ -266,11 +284,8 @@ class X4SaveParser {
             
             if (!this.data.sectors[this.currentSector]?.objects[code]) return;
             
-            if (clazz === 'gate') {
-                this.data.sectors[this.currentSector].objects[code].target_id = outerId;
-            } else {
-                this.data.sectors[this.currentSector].objects[code].target_id = innerId;
-            }
+            this.data.sectors[this.currentSector].objects[code].connection_id = outerId;
+            this.data.sectors[this.currentSector].objects[code].target_id = innerId;
         } else if (this.isSuperHighwayStepEntry(path)) {
             this.lastEntrygateId = path[path.length - 1].attributes.id;
         } else if (this.isSuperHighwayStepExit(path)) {
@@ -389,20 +404,65 @@ class X4SaveParser {
     }
 
     writeGateTargetSectors() {
-        for (const sector of Object.values(this.data.sectors)) {
+        // Build map of connection ID -> Object (Local Connection)
+        const connectionLocationMap = {};
+        // Build map of Target ID -> Object (Who points to this target?)
+        const targetLocationMap = {};
+        
+        for (const [sectorId, sector] of Object.entries(this.data.sectors)) {
+            for (const o of Object.values(sector.objects)) {
+                if (o.connection_id) {
+                    connectionLocationMap[o.connection_id] = { sectorId: sectorId, object: o };
+                }
+                if (o.target_id) {
+                    targetLocationMap[o.target_id] = { sectorId: sectorId, object: o };
+                }
+            }
+        }
+
+        for (const [sectorId, sector] of Object.entries(this.data.sectors)) {
             for (const o of Object.values(sector.objects)) {
                 if (!['gate', 'highwayentrygate', 'highwayexitgate'].includes(o.class)) continue;
                 
-                let targetId = o.target_id || null;
-                if (['highwayentrygate', 'highwayexitgate'].includes(o.class)) {
-                    targetId = this.superHighwayStep[targetId];
-                }
-                if (targetId === null || targetId === undefined) continue;
+                let targetConnId = o.target_id;
+                let target = null;
                 
-                const targetSectorMacro = this.sectorMacroOfConnectionId[targetId] || '';
-                const targetSectorName = this.resolveName(this.sectorNames[targetSectorMacro] || '');
-                o.target_sector_macro = targetSectorMacro;
-                o.target_sector_name = targetSectorName;
+                // Strategy 1: Direct Connection (Standard Gates)
+                // The target_id is the connection ID of the remote gate
+                if (connectionLocationMap[targetConnId]) {
+                    target = connectionLocationMap[targetConnId];
+                }
+                
+                // Strategy 2: Super Highway Step
+                // The target_id is the Tube Entry. We hop to Tube Exit.
+                // Then find who points to Tube Exit (the remote gate).
+                else if (this.superHighwayStep[targetConnId]) {
+                    const stepId = this.superHighwayStep[targetConnId];
+                    if (targetLocationMap[stepId]) {
+                        target = targetLocationMap[stepId];
+                    }
+                }
+                
+                if (target) {
+                    o.target_code = target.object.code;
+                    o.target_sector_id = target.sectorId;
+                    o.target_sector_name = this.resolveName(this.sectorNames[target.sectorId] || target.sectorId);
+                    
+                    // For compatibility with existing gate click logic
+                    o.target_sector_macro = target.sectorId;
+                } else {
+                    // Fallback using old sectorMacroOfConnectionId logic
+                    // This might be needed if the target object wasn't parsed (e.g. invalid object filter)
+                    // but we still know the sector of the connection.
+                    // For standard gates, targetConnId is remote connection.
+                    // sectorMacroOfConnectionId maps connectionId -> Sector.
+                    const targetSectorMacro = this.sectorMacroOfConnectionId[targetConnId];
+                    if (targetSectorMacro) {
+                        o.target_sector_macro = targetSectorMacro;
+                        o.target_sector_name = this.resolveName(this.sectorNames[targetSectorMacro] || targetSectorMacro);
+                        o.target_sector_id = targetSectorMacro;
+                    }
+                }
             }
         }
     }
@@ -484,7 +544,8 @@ self.onmessage = async function(e) {
                 config.sectorNames,
                 config.shipNames,
                 config.positions,
-                config.strings
+                config.strings,
+                config.sectorSunlight
             );
             const { parser: saxParser, getTagCount } = x4Parser.createSAXParser();
             

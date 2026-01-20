@@ -1,0 +1,438 @@
+[
+ {
+   "sector": "Adventure's Promise",
+   "sunlight": 71
+ },
+ {
+   "sector": "Antigone Memorial",
+   "sunlight": 126
+ },
+ {
+   "sector": "Asteroid Belt",
+   "sunlight": 13
+ },
+ {
+   "sector": "Atiya's Misfortune I",
+   "sunlight": 109
+ },
+ {
+   "sector": "Atiya's Misfortune III",
+   "sunlight": 93
+ },
+ {
+   "sector": "Atreus' Clouds",
+   "sunlight": 41
+ },
+ {
+   "sector": "Avarice I",
+   "sunlight": 1390
+ },
+ {
+   "sector": "Avarice V Dead End",
+   "sunlight": 1390
+ },
+ {
+   "sector": "Barren Shores",
+   "sunlight": 83
+ },
+ {
+   "sector": "Black Hole Sun IV",
+   "sunlight": 116
+ },
+ {
+   "sector": "Black Hole Sun V",
+   "sunlight": 119
+ },
+ {
+   "sector": "CEO's Doubt",
+   "sunlight": 82
+ },
+ {
+   "sector": "Cardinal's Domain",
+   "sunlight": 124
+ },
+ {
+   "sector": "Cardinal's Redress",
+   "sunlight": 88
+ },
+ {
+   "sector": "Circle of Deceit",
+   "sunlight": 142
+ },
+ {
+   "sector": "Eighteen Billion",
+   "sunlight": 90
+ },
+ {
+   "sector": "Emperor's Pride VI",
+   "sunlight": 65
+ },
+ {
+   "sector": "Family Kritt",
+   "sunlight": 239
+ },
+ {
+   "sector": "Family Nhuut",
+   "sunlight": 85
+ },
+ {
+   "sector": "Family Zhin",
+   "sunlight": 71
+ },
+ {
+   "sector": "Faulty Logic I",
+   "sunlight": 177
+ },
+ {
+   "sector": "Faulty Logic VII",
+   "sunlight": 147
+ },
+ {
+   "sector": "Fires of Defeat",
+   "sunlight": 81
+ },
+ {
+   "sector": "Frontier Edge",
+   "sunlight": 172
+ },
+ {
+   "sector": "Gaian Prophecy",
+   "sunlight": 208
+ },
+ {
+   "sector": "Getsu Fune",
+   "sunlight": 93
+ },
+ {
+   "sector": "Grand Exchange I",
+   "sunlight": 123
+ },
+ {
+   "sector": "Grand Exchange III",
+   "sunlight": 135
+ },
+ {
+   "sector": "Grand Exchange IV",
+   "sunlight": 129
+ },
+ {
+   "sector": "Great Reef",
+   "sunlight": 128
+ },
+ {
+   "sector": "Guiding Star VII",
+   "sunlight": 71
+ },
+ {
+   "sector": "Hatikvah's Choice III",
+   "sunlight": 91
+ },
+ {
+   "sector": "Hatikvah's Faith",
+   "sunlight": 88
+ },
+ {
+   "sector": "Heart of Acrimony I The Boneyard",
+   "sunlight": 64
+ },
+ {
+   "sector": "Heart of Acrimony II",
+   "sunlight": 245
+ },
+ {
+   "sector": "Heretic's End",
+   "sunlight": 181
+ },
+ {
+   "sector": "Hewa's Twin I",
+   "sunlight": 116
+ },
+ {
+   "sector": "Hewa's Twin II",
+   "sunlight": 102
+ },
+ {
+   "sector": "Hewa's Twin V",
+   "sunlight": 82
+ },
+ {
+   "sector": "Holy Vision",
+   "sunlight": 208
+ },
+ {
+   "sector": "Ianamus Zura IV",
+   "sunlight": 133
+ },
+ {
+   "sector": "Ianamus Zura VII",
+   "sunlight": 115
+ },
+ {
+   "sector": "Lasting Vengeance",
+   "sunlight": 100
+ },
+ {
+   "sector": "Loomanckstrat's Legacy",
+   "sunlight": 2
+ },
+ {
+   "sector": "Matrix #101",
+   "sunlight": 408
+ },
+ {
+   "sector": "Matrix #451",
+   "sunlight": 201
+ },
+ {
+   "sector": "Matrix #598",
+   "sunlight": 77
+ },
+ {
+   "sector": "Matrix #79B",
+   "sunlight": 239
+ },
+ {
+   "sector": "Matrix #9",
+   "sunlight": 100
+ },
+ {
+   "sector": "Memory of Profit IX",
+   "sunlight": 115
+ },
+ {
+   "sector": "Menelaus' Oasis",
+   "sunlight": 271
+ },
+ {
+   "sector": "Mercury",
+   "sunlight": 714
+ },
+ {
+   "sector": "Mi Ton's Refuge",
+   "sunlight": 53
+ },
+ {
+   "sector": "Mists of Artemis",
+   "sunlight": 141
+ },
+ {
+   "sector": "Mitsuno's Defiance",
+   "sunlight": 111
+ },
+ {
+   "sector": "Mitsuno's Sacrifice",
+   "sunlight": 106
+ },
+ {
+   "sector": "Moo-Kye's Revenge",
+   "sunlight": 93
+ },
+ {
+   "sector": "Morning Star IV",
+   "sunlight": 65
+ },
+ {
+   "sector": "Neptune",
+   "sunlight": 6
+ },
+ {
+   "sector": "Nopileos' Fortune II",
+   "sunlight": 82
+ },
+ {
+   "sector": "Nopileos' Memorial",
+   "sunlight": 163
+ },
+ {
+   "sector": "Ocean of Fantasy",
+   "sunlight": 12
+ },
+ {
+   "sector": "Oort Cloud",
+   "sunlight": 2
+ },
+ {
+   "sector": "Ore Belt",
+   "sunlight": 134
+ },
+ {
+   "sector": "Path to Profit",
+   "sunlight": 143
+ },
+ {
+   "sector": "Pious Mists IV",
+   "sunlight": 89
+ },
+ {
+   "sector": "Pious Mists XI",
+   "sunlight": 118
+ },
+ {
+   "sector": "Pontifex's Claim",
+   "sunlight": 194
+ },
+ {
+   "sector": "President's End",
+   "sunlight": 71
+ },
+ {
+   "sector": "Reflected Stars",
+   "sunlight": 118
+ },
+ {
+   "sector": "Rhy's Defiance",
+   "sunlight": 163
+ },
+ {
+   "sector": "Rolk's Demise",
+   "sunlight": 15
+ },
+ {
+   "sector": "Sanctuary of Darkness",
+   "sunlight": 174
+ },
+ {
+   "sector": "Sanctum Verge",
+   "sunlight": 89
+ },
+ {
+   "sector": "Saturn 2",
+   "sunlight": 8
+ },
+ {
+   "sector": "Savage Spur I",
+   "sunlight": 117
+ },
+ {
+   "sector": "Savage Spur II",
+   "sunlight": 125
+ },
+ {
+   "sector": "Scale Plate Green I",
+   "sunlight": 126
+ },
+ {
+   "sector": "Scale Plate Green VII",
+   "sunlight": 115
+ },
+ {
+   "sector": "Scarlet Star",
+   "sunlight": 266
+ },
+ {
+   "sector": "Second Contact II Flashpoint",
+   "sunlight": 59
+ },
+ {
+   "sector": "Second Contact VII",
+   "sunlight": 55
+ },
+ {
+   "sector": "Second Contact XI",
+   "sunlight": 47
+ },
+ {
+   "sector": "Segaris",
+   "sunlight": 187
+ },
+ {
+   "sector": "Silent Witness I",
+   "sunlight": 98
+ },
+ {
+   "sector": "Silent Witness XI",
+   "sunlight": 118
+ },
+ {
+   "sector": "Silent Witness XII",
+   "sunlight": 147
+ },
+ {
+   "sector": "Tempting Fumes",
+   "sunlight": 166
+ },
+ {
+   "sector": "Tharka's Cascade XV",
+   "sunlight": 142
+ },
+ {
+   "sector": "Tharka's Cascade XVII",
+   "sunlight": 129
+ },
+ {
+   "sector": "Tharka's Ravine IV Tharka's Fall",
+   "sunlight": 131
+ },
+ {
+   "sector": "Tharka's Ravine VIII",
+   "sunlight": 126
+ },
+ {
+   "sector": "Tharka's Ravine XVI",
+   "sunlight": 117
+ },
+ {
+   "sector": "The Reach",
+   "sunlight": 367
+ },
+ {
+   "sector": "The Void",
+   "sunlight": 164
+ },
+ {
+   "sector": "Third Redemption",
+   "sunlight": 100
+ },
+ {
+   "sector": "Titan",
+   "sunlight": 8
+ },
+ {
+   "sector": "Trinity Sanctum III",
+   "sunlight": 133
+ },
+ {
+   "sector": "Trinity Sanctum VII",
+   "sunlight": 106
+ },
+ {
+   "sector": "Turquoise Sea IX",
+   "sunlight": 141
+ },
+ {
+   "sector": "Turquoise Sea X",
+   "sunlight": 128
+ },
+ {
+   "sector": "Two Grand",
+   "sunlight": 133
+ },
+ {
+   "sector": "Unknown System",
+   "sunlight": 5
+ },
+ {
+   "sector": "Void of Opportunity",
+   "sunlight": 83
+ },
+ {
+   "sector": "Watchful Gaze",
+   "sunlight": 41
+ },
+ {
+   "sector": "Windfall I Union Summit",
+   "sunlight": 20
+ },
+ {
+   "sector": "Windfall III The Hoard",
+   "sunlight": 16
+ },
+ {
+   "sector": "Windfall IV Aurora's Dream",
+   "sunlight": 11
+ },
+ {
+   "sector": "Wretched Skies X",
+   "sunlight": 108
+ }
+]
